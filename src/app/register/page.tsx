@@ -33,12 +33,17 @@ export default function RegisterPage() {
     e.preventDefault();
     try {
       const user = await registerUser(email, password, name, phone);
-      localStorage.setItem("userRegister", JSON.stringify(user));
+      
+      if (typeof window !== "undefined") {
+        localStorage.setItem("userRegister", JSON.stringify(user));
+      }
+      
       window.location.href = "/";
     } catch (error) {
       setError("Failed to register. Please try again.");
     }
   };
+  
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-cover bg-center relative">

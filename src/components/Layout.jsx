@@ -6,10 +6,7 @@ import "react-toastify/dist/ReactToastify.css";
 const Layout = ({ children }) => {
 
 
-  // if(!localStorage.getItem('userRegister')) {
-  //   window.location.href = '/register';
-  // }
-
+ 
   return (
     <>  
       <Header />

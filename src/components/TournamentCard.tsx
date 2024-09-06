@@ -11,7 +11,7 @@ import {
 import { CalendarIcon, TimerIcon, Users } from "lucide-react";
 import Link from "next/link";
 import RegisterLobbyModal from "./RegisterLobbyModal";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 enum LobbyType {
   Solo = "Solo",
@@ -54,11 +54,13 @@ const lobbyType = convertToLobbyType(playersNumber);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleOpenModal = () => {
-    if (!localStorage.getItem("userRegister")) {
-      window.location.href = "/register";
+    if (typeof window !== 'undefined') {
+      if (!localStorage.getItem('userRegister')) {
+        window.location.href = '/register';
+      } else {
+        setIsModalOpen(true);
+      }
     }
-    setIsModalOpen(true);
-
   };
 
   const handleCloseModal = () => {
@@ -96,12 +98,12 @@ const lobbyType = convertToLobbyType(playersNumber);
         </div>
       </CardContent>
       <CardFooter className="p-4">
-        <Button
-          onClick={handleOpenModal} 
-          className="w-full bg-yellow-600 text-white p-3 rounded-lg hover:bg-yellow-700 transition-colors duration-300 ease-in-out"
-        >
-          Register Lobby
-        </Button>
+      <Button
+        onClick={handleOpenModal}
+        className="w-full bg-yellow-600 text-white p-3 rounded-lg hover:bg-yellow-700 transition-colors duration-300 ease-in-out"
+      >
+        Register Lobby
+      </Button>
       </CardFooter>
       <RegisterLobbyModal open={isModalOpen} onClose={handleCloseModal} lobbyType={LobbyType[playersNumber as keyof typeof LobbyType]} />
     </Card>

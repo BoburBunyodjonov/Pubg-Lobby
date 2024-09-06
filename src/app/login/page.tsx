@@ -33,7 +33,9 @@ export default function LoginPage() {
       await loginUser(email, password);
       if (email === "admin12345@gmail.com" && password === "admin12345") {
         window.location.href = "/dashboard";
-        localStorage.setItem("Admin", "Admin");
+        if (typeof window !== "undefined") {
+          localStorage.setItem("Admin", "Admin");
+        }
       } else {
         window.location.href = "/";
       }

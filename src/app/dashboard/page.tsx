@@ -71,9 +71,13 @@ export default function DashboardPage() {
   const [openEditDialog, setOpenEditDialog] = useState(false);
   const [openAddDialog, setOpenAddDialog] = useState(false);
 
-  if (!localStorage.getItem("Admin")) {
-    window.location.href = "/";
-  }
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      if (!localStorage.getItem('Admin')) {
+        window.location.href = '/';
+      }
+    }
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
