@@ -1,113 +1,260 @@
+"use client";
+
 import Image from "next/image";
+import Layout from "@/components/Layout";
+// import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useEffect, useState } from "react";
+
+import AirDrop from "../images/airdrop.png";
+import ImgBg from "../images/cf13d8d0bc89f5b9b02a5917f4b02135.jpg";
+import Header from "@/components/Header";
+import { Gamepad2, Headphones, Trophy, Users } from "lucide-react";
+
+const styles = `
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes slideInLeft {
+    from {
+      opacity: 0;
+      transform: translateX(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes slideInRight {
+    from {
+      opacity: 0;
+      transform: translateX(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes rotate {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  @keyframes scale {
+    0%, 100% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.05);
+    }
+  }
+
+  .animate-fadeIn {
+    animation: fadeIn 1s ease-out;
+  }
+
+  .animate-fadeInUp {
+    animation: fadeInUp 1s ease-out;
+  }
+
+  .animate-slideInLeft {
+    animation: slideInLeft 1s ease-out;
+  }
+
+  .animate-slideInRight {
+    animation: slideInRight 1s ease-out;
+  }
+
+  .animate-rotate {
+    animation: rotate 10s linear infinite;
+  }
+
+  .animate-scale {
+    animation: scale 2s ease-in-out infinite;
+  }
+
+  .animation-delay-200 {
+    animation-delay: 200ms;
+  }
+
+  .animation-delay-400 {
+    animation-delay: 400ms;
+  }
+
+  .animation-delay-600 {
+    animation-delay: 600ms;
+  }
+
+  .animation-delay-800 {
+    animation-delay: 800ms;
+  }
+`
+
+interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: 'default' | 'outline'
+}
+
+const Button: React.FC<ButtonProps> = ({ children, className, variant = 'default', ...props }) => {
+  const baseStyles = "px-4 py-2 rounded font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-300 ease-in-out"
+  const variantStyles = {
+    default: "bg-white text-black hover:bg-gray-200 hover:scale-105",
+    outline: "bg-transparent text-white border border-white hover:bg-white hover:text-black hover:scale-105"
+  }
+  
+  return (
+    <button 
+      className={`${baseStyles} ${variantStyles[variant]} ${className}`} 
+      {...props}
+    >
+      {children}
+    </button>
+  )
+}
+
+
 
 export default function Home() {
+  const [showAirdrop, setShowAirdrop] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setShowAirdrop(true), 2000);
+    return () => clearTimeout(timer);
+  }, []);
+
+
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 w-full max-w-5xl items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-          <code className="font-mono font-bold">src/app/page.tsx</code>
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:size-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{" "}
+    <>
+      <Layout>
+        <main className="flex-1 ">
+          <section className="w-full py-12 flex items-center md:py-24 lg:py-32 xl:py-48 relative overflow-hidden  h-[100vh]">
             <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
+              src={ImgBg}
+              alt="PUBG Mobile Battle Scene"
+              layout="fill"
+              objectFit="cover"
+              objectPosition="center top"
+              className="absolute inset-0 "
             />
-          </a>
-        </div>
-      </div>
-
-      <div className="relative z-[-1] flex place-items-center before:absolute before:h-[300px] before:w-full before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-full after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 sm:before:w-[480px] sm:after:w-[240px] before:lg:h-[360px]">
-        <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
-
-      <div className="mb-32 grid text-center lg:mb-0 lg:w-full lg:max-w-5xl lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Docs{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Learn{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Templates{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Explore starter templates for Next.js.
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Deploy{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-balance text-sm opacity-50">
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
+            <div className="absolute inset-0 bg-black bg-opacity-60"></div>
+            <div className="container mx-auto px-4 md:px-6 relative z-10">
+              <div className="flex flex-col items-center space-y-4 text-center">
+                <div className="space-y-3">
+                  <h1 className="text-3xl text-[#DAA520] font-bold tracking-tighter sm:text-4xl md:text-5xl lg:text-6xl/none animate-fadeInUp">
+                    Welcome to PUBG Mobile Fan Site
+                  </h1>
+                  <p className="mx-auto max-w-[700px] text-gray-300 md:text-xl animate-fadeInUp animation-delay-200">
+                    Your ultimate destination for all things PUBG Mobile. Join
+                    the community, stay updated, and dominate the battleground!
+                  </p>
+                </div>
+                <div className="space-x-4 animate-fadeInUp animation-delay-400">
+                  <Button className="animate-gunfire bg-[#DAA520]">
+                    Join Now
+                  </Button>
+                  <Button
+                    className="border-[#DAA520] text-[#DAA520]"
+                    variant="outline"
+                  >
+                    Learn More
+                  </Button>
+                </div>
+              </div>
+            </div>
+            {showAirdrop && (
+              <div className="absolute top-0 left-1/2 transform -translate-x-1/2 animate-airdrop">
+                <Image
+                  src={AirDrop}
+                  alt="PUBG Airdrop"
+                  width={200}
+                  height={200}
+                />
+              </div>
+            )}
+          </section>
+          <section className="w-full py-12 md:py-24 lg:py-32 bg-gray-800">
+            <div className="container mx-auto px-4 md:px-6">
+              <h2 className="text-3xl text-white font-bold tracking-tighter sm:text-5xl text-center mb-12 animate-fadeInUp">
+                Features
+              </h2>
+              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+                <Card className="space-y-3 bg-gray-700 p-6 text-white animate-fadeInUp animation-delay-200 hover:shadow-lg transition-all duration-300 ease-in-out">
+                  <CardHeader>
+                  <Users className="h-10 w-10 mb-2 animate-bounce" />
+                  </CardHeader>
+                  <CardTitle className="text-xl font-bold">Community</CardTitle>
+                  <CardContent>
+                      Connect with fellow PUBG Mobile enthusiasts and make new
+                      friends.
+                  </CardContent>
+                </Card>
+                <Card className="space-y-3 p-6 bg-gray-700 text-white animate-fadeInUp animation-delay-400 hover:shadow-lg transition-all duration-300 ease-in-out">
+                  <CardHeader>
+                  <Trophy className="h-10 w-10 mb-2 animate-bounce animation-delay-200" />
+                  </CardHeader>
+                  <CardTitle className="text-xl font-bold">Tournaments</CardTitle>
+                  <CardContent>
+                      Participate in exciting tournaments and win amazing
+                      prizes.
+                  </CardContent>
+                </Card>
+                <Card className="space-y-3  p-6 bg-gray-700 text-white animate-fadeInUp animation-delay-600 hover:shadow-lg transition-all duration-300 ease-in-out">
+                  <CardHeader>
+                  <Headphones className="h-10 w-10 mb-2 animate-bounce animation-delay-400" />
+                  </CardHeader>
+                  <CardTitle className="text-xl font-bold">Strategy Guides</CardTitle>
+                  <CardContent>
+                      Access expert tips and strategies to improve your
+                      gameplay.
+                  </CardContent>
+                </Card>
+                <Card className="space-y-3 p-6 bg-gray-700 text-white animate-fadeInUp animation-delay-800 hover:shadow-lg transition-all duration-300 ease-in-out">
+                  <CardHeader>
+                  <Gamepad2 className="h-10 w-10 mb-2 animate-bounce animation-delay-600" />
+                  </CardHeader>
+                  <CardTitle className="text-xl font-bold">Latest Updates</CardTitle>
+                  <CardContent>
+                      Stay informed about the latest PUBG Mobile news and
+                      updates.
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </section>
+          <section className="w-full py-12 md:py-24 lg:py-32 bg-gray-900 text-white relative overflow-hidden">
+          <div className="container mx-auto px-4 md:px-6">
+              <div className="flex flex-col items-center space-y-4 text-center">
+                <div className="space-y-2">
+                  <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl animate-fadeInUp">Join Our Community</h2>
+                  <p className="mx-auto max-w-[600px] text-gray-300 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed animate-fadeInUp animation-delay-200">
+                    Be part of the fastest-growing PUBG Mobile community. Share your experiences, learn from others, and dominate the battleground together!
+                  </p>
+                </div>
+                <Button className="animate-bounce">Sign Up Now</Button>
+              </div>
+            </div>
+          </section>
+        </main>
+      </Layout>
+    </>
   );
 }
