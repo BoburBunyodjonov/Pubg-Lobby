@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Gamepad2, Users, Trophy, Headphones, MenuIcon, ShieldCloseIcon } from "lucide-react";
 import { useEffect, useState } from "react";
+import Image from "next/image";
 const styles = `
 @keyframes shrinkingZone {
   0% {
@@ -98,6 +99,9 @@ const styles = `
 }
 `;
 
+import Logo from "@/assets/images/0.png"
+import { Typography } from '@mui/material';
+
 const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [currentPath, setCurrentPath] = useState('');
@@ -113,8 +117,9 @@ const Header = () => {
       <header className="fixed inset-x-0 top-0 z-40 px-6 lg:px-8 h-16 flex items-center bg-[#1f1f1f] shadow-md">
         <div className="container mx-auto flex items-center justify-between">
           <Link className="flex items-center space-x-2" href="/">
-            <Gamepad2 className="h-8 w-8 text-white transition-transform duration-300 ease-in-out transform hover:rotate-12" />
-            <span className="text-xl lg:text-2xl text-white font-bold">PUBG Mobile Fan Site</span>
+            {/* <Gamepad2 className="h-8 w-8 text-white transition-transform duration-300 ease-in-out transform hover:rotate-12" /> */}
+           <Image src={Logo} width={50} height={50} alt="PUBG ZONE"/>
+           <Typography variant="h5" color="initial" className="text-white font-bold">PUBG ZONE</Typography>
           </Link>
           <nav className="hidden lg:flex lg:gap-8">
             <Link
@@ -124,16 +129,22 @@ const Header = () => {
               Home
             </Link>
             <Link
-              className={`text-lg font-medium transition-colors duration-300 ease-in-out ${isActive('/news') ? 'text-blue-400' : 'text-white'} hover:text-blue-400`}
+              className={`text-lg font-medium transition-colors duration-300 ease-in-out ${isActive('/schedule') ? 'text-blue-400' : 'text-white'} hover:text-blue-400`}
               href="/schedule"
             >
-              Order
+              Schedule
             </Link>
             <Link
               className={`text-lg font-medium transition-colors duration-300 ease-in-out ${isActive('/tournaments') ? 'text-blue-400' : 'text-white'} hover:text-blue-400`}
               href="/tournaments"
             >
               Tournaments
+            </Link>
+            <Link
+              className={`text-lg font-medium transition-colors duration-300 ease-in-out ${isActive('/profile') ? 'text-blue-400' : 'text-white'} hover:text-blue-400`}
+              href="/profile"
+            >
+              Profile
             </Link>
             <Link
               className={`text-lg font-medium transition-colors duration-300 ease-in-out ${isActive('/register') ? 'text-blue-400' : 'text-white'} hover:text-blue-400`}
@@ -158,11 +169,11 @@ const Header = () => {
               Home
             </Link>
             <Link
-              className={`text-xl font-medium py-4 ${isActive('/news') ? 'text-blue-400' : 'text-white'} hover:text-blue-400`}
+              className={`text-xl font-medium py-4 ${isActive('/schedule') ? 'text-blue-400' : 'text-white'} hover:text-blue-400`}
               href="/news"
               onClick={() => setIsMobileMenuOpen(false)}
             >
-              News
+              Schedule
             </Link>
             <Link
               className={`text-xl font-medium py-4 ${isActive('/tournaments') ? 'text-blue-400' : 'text-white'} hover:text-blue-400`}
@@ -170,6 +181,13 @@ const Header = () => {
               onClick={() => setIsMobileMenuOpen(false)}
             >
               Tournaments
+            </Link>
+            <Link
+              className={`text-xl font-medium py-4 ${isActive('/profile') ? 'text-blue-400' : 'text-white'} hover:text-blue-400`}
+              href="/tournaments"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Profile
             </Link>
             <Link
               className={`text-xl font-medium py-4 ${isActive('/register') ? 'text-blue-400' : 'text-white'} hover:text-blue-400`}

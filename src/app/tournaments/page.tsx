@@ -11,6 +11,7 @@ const Tournaments = () => {
   const [maps, setMaps] = useState<GameMap[]>([]);
   const [filteredMaps, setFilteredMaps] = useState<GameMap[]>([]);
   const [playersFilter, setPlayersFilter] = useState<string | "all">("all");
+  const [mapFilter, setMapFilter] = useState<string | "all">("all");
   const [startDate, setStartDate] = useState<string | null>(null);
   const [endDate, setEndDate] = useState<string | null>(null);
 
@@ -19,7 +20,7 @@ const Tournaments = () => {
       try {
         const fetchedMaps = await getMaps();
         setMaps(fetchedMaps);
-        setFilteredMaps(fetchedMaps); // Initialize filteredMaps
+        setFilteredMaps(fetchedMaps);
       } catch (error) {
         console.error("Error fetching maps data: ", error);
       }
@@ -42,6 +43,12 @@ const Tournaments = () => {
         );
       }
 
+      if (mapFilter !== "all") {
+        filtered = filtered.filter(
+          (map) => map.name === mapFilter
+        );
+      }
+
       // Filter by date range
       if (startDate && endDate) {
         filtered = filtered.filter((map) => {
@@ -56,7 +63,7 @@ const Tournaments = () => {
     };
 
     applyFilters();
-  }, [playersFilter, startDate, endDate, maps]);
+  }, [playersFilter, mapFilter, startDate, endDate, maps]);
 
   return (
     <>
@@ -71,7 +78,9 @@ const Tournaments = () => {
             </h1>
             <Filters
               playersFilter={playersFilter}
+              mapFilter={mapFilter}
               setPlayersFilter={setPlayersFilter}
+              setMapFilter={setMapFilter}
               startDate={startDate || ""} // Convert null to an empty string
               setStartDate={setStartDate}
               endDate={endDate || ""} // Convert null to an empty string

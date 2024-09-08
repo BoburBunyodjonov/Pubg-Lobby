@@ -68,18 +68,10 @@ export default function ParticipantsPage() {
                 variant="h6"
                 sx={{ color: "white", fontWeight: "bold" }}
               >
-                Tournament Participants
+                Users
               </Typography>
             }
-            action={
-              <Button
-                variant="contained"
-                color="secondary"
-                onClick={handleLogout}
-              >
-                Logout
-              </Button>
-            }
+           
             sx={{ borderBottom: "1px solid #333", padding: "16px" }}
           />
           <CardContent>
@@ -97,7 +89,7 @@ export default function ParticipantsPage() {
                       Name
                     </TableCell>
                     <TableCell sx={{ color: "white", fontWeight: "bold" }}>
-                      PUBG ID
+                      Phone Number
                     </TableCell>
                   </TableRow>
                 </TableHead>

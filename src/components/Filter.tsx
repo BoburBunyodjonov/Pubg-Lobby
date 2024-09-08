@@ -68,6 +68,8 @@ const StyledTextField = styled(TextField)(({ theme }) => ({
 interface FiltersProps {
   playersFilter: string | number;
   setPlayersFilter: Dispatch<SetStateAction<string | "all">>;
+  mapFilter: string | number;
+  setMapFilter: Dispatch<SetStateAction<string | "all">>;
   startDate: string;
   setStartDate: (date: string) => void;
   endDate: string;
@@ -82,50 +84,67 @@ const Filters: FC<FiltersProps> = ({
   setStartDate,
   endDate,
   setEndDate,
+  mapFilter,
+  setMapFilter,
 }) => {
   const handlePlayersFilterChange = (event: SelectChangeEvent<unknown>) => {
-    setPlayersFilter((event.target.value as string | "all"));
+    setPlayersFilter(event.target.value as string | "all");
+  };
+  const handleMapFilterChange = (event: SelectChangeEvent<unknown>) => {
+    setMapFilter(event.target.value as string | "all");
   };
 
   return (
     <ThemeProvider theme={theme}>
       <StyledPaper elevation={3}>
-       <div className="grid md:grid-cols-2 gap-3">
-       <div className="">
-          <FormControl fullWidth>
-            <InputLabel>Number of Players</InputLabel>
-            <StyledSelect
-              value={playersFilter}
-              onChange={handlePlayersFilterChange}
-              label="Number of Players"
-            >
-              <MenuItem value="all">All</MenuItem>
-              <MenuItem value="Solo">Solo</MenuItem>
-              <MenuItem value="Duo">Duo</MenuItem>
-              <MenuItem value="Squad">Squad</MenuItem>
-            </StyledSelect>
-          </FormControl>
+        <div className="grid md:grid-cols-2 gap-3">
+          <div className="grid md:grid-cols-2 gap-3">
+            <FormControl fullWidth>
+              <InputLabel>Number of Players</InputLabel>
+              <StyledSelect
+                value={playersFilter}
+                onChange={handlePlayersFilterChange}
+                label="Number of Players"
+              >
+                <MenuItem value="all">All</MenuItem>
+                <MenuItem value="Solo">Solo</MenuItem>
+                <MenuItem value="Duo">Duo</MenuItem>
+                <MenuItem value="Squad">Squad</MenuItem>
+              </StyledSelect>
+            </FormControl>
+            <FormControl fullWidth>
+              <InputLabel>Maps</InputLabel>
+              <StyledSelect
+                value={mapFilter}
+                onChange={handleMapFilterChange}
+                label="Maps"
+              >
+                <MenuItem value="all">All</MenuItem>
+                <MenuItem value="Livik">Livik</MenuItem>
+                <MenuItem value="Erangel">Erangel</MenuItem>
+              </StyledSelect>
+            </FormControl>
+          </div>
+          <div className="grid md:grid-cols-2 gap-3">
+            <StyledTextField
+              label="Start Date"
+              type="date"
+              InputLabelProps={{ shrink: true }}
+              value={startDate || ""}
+              onChange={(e) => setStartDate(e.target.value)}
+              fullWidth
+              className=""
+            />
+            <StyledTextField
+              label="End Date"
+              type="date"
+              InputLabelProps={{ shrink: true }}
+              value={endDate || ""}
+              onChange={(e) => setEndDate(e.target.value)}
+              fullWidth
+            />
+          </div>
         </div>
-        <div className=" grid md:grid-cols-2 gap-3">
-          <StyledTextField
-            label="Start Date"
-            type="date"
-            InputLabelProps={{ shrink: true }}
-            value={startDate || ""}
-            onChange={(e) => setStartDate(e.target.value)}
-            fullWidth
-            className=""
-          />
-          <StyledTextField
-            label="End Date"
-            type="date"
-            InputLabelProps={{ shrink: true }}
-            value={endDate || ""}
-            onChange={(e) => setEndDate(e.target.value)}
-            fullWidth
-          />
-        </div>
-       </div>
       </StyledPaper>
     </ThemeProvider>
   );

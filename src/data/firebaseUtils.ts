@@ -21,6 +21,54 @@ import { realTimeDB, auth } from './firebase';
   }
 
 
+
+ export interface RegsiterLobby {
+    createdAt: string;
+    lobbyType: string;
+    map: string;
+    date: string;
+    registrationUrl: string;
+    players: {
+      fullName: string;
+      email: string;
+      phoneNumber: string;
+      pubgId: string;
+    }[];
+  }
+
+
+  export const getRegisteredLobby = async (): Promise<RegsiterLobby[]> => {
+    try {
+      const lobbyRef = ref(realTimeDB, 'lobbyRegister');
+      const snapshot = await get(lobbyRef);
+  
+      if (snapshot.exists()) {
+        const lobbyData = snapshot.val();
+  
+        return Object.keys(lobbyData).map(id => ({
+          createdAt: lobbyData[id].createdAt,
+          lobbyType: lobbyData[id].lobbyType,
+          map: lobbyData[id].map,
+          date: lobbyData[id].date,
+          registrationUrl: lobbyData[id].registrationUrl,
+          players: lobbyData[id].players.map((player: any) => ({
+            fullName: player.fullName,
+            phoneNumber: player.phoneNumber,
+            pubgId: player.pubgId,
+            email: player.email,
+          }))
+        }));
+      } else {
+        return [];
+      }
+    } catch (error) {
+      console.error("Error fetching registered users: ", error);
+      throw error;
+    }
+  };
+  
+  
+
   export const getRegisteredUsers = async (): Promise<Participant[]> => {
     try {
       const usersRef = ref(realTimeDB, 'users');

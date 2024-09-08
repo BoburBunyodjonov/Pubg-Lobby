@@ -1,16 +1,24 @@
 "use client";
 
+import _ from "lodash";
 import React, { useState, useEffect } from "react";
 import { v4 as uuidv4 } from "uuid";
+import { auth, realTimeDB } from "../../data/firebase"; // Ensure correct import
 import {
-  Avatar,
-  Grid,
+  ref,
+  push,
+  set,
+  query,
+  orderByChild,
+  equalTo,
+  get,
+} from "firebase/database";
+import {
   Button,
   Card,
   CardContent,
   CardHeader,
   FormControl,
-  Switch,
   Table,
   TableBody,
   TableCell,
@@ -23,7 +31,14 @@ import {
   DialogContent,
   DialogTitle,
   Box,
+  Tabs,
+  Tab,
+  Select,
+  MenuItem,
 } from "@mui/material";
+// @ts-ignore
+import Grid from "@mui/material/Grid";
+import Grid2 from "@mui/material/Grid2";
 import {
   getRegisteredUsers,
   updateGamePermission,
@@ -32,6 +47,8 @@ import {
   getMaps,
   deleteMap,
   updateMap,
+  getRegisteredLobby,
+  RegsiterLobby,
 } from "../../data/firebaseUtils";
 import { uploadFile } from "@/data/uploadFile";
 import { GameMap } from "@/types/types";
@@ -39,6 +56,14 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Image from "next/image";
 
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  phone: number;
+  isOnline: boolean;
+  hasGamePermission: boolean;
+}
 interface User {
   id: string;
   name: string;
@@ -58,8 +83,43 @@ interface Map {
   playersNumber: string;
 }
 
+interface TabPanelProps {
+  children?: React.ReactNode;
+  index: number;
+  value: number;
+}
+
+function TabPanel(props: TabPanelProps) {
+  const { children, value, index, ...other } = props;
+
+  return (
+    <div
+      className="w-[100%]"
+      role="tabpanel"
+      hidden={value !== index}
+      id={`vertical-tabpanel-${index}`}
+      aria-labelledby={`vertical-tab-${index}`}
+      {...other}
+    >
+      {value === index && (
+        <Box sx={{ p: 3 }}>
+          <Typography>{children}</Typography>
+        </Box>
+      )}
+    </div>
+  );
+}
+
+function a11yProps(index: number) {
+  return {
+    id: `vertical-tab-${index}`,
+    "aria-controls": `vertical-tabpanel-${index}`,
+  };
+}
+
 export default function DashboardPage() {
   const [registeredUsers, setRegisteredUsers] = useState<User[]>([]);
+  const [registeredLobby, setRegisteredLobby] = useState<RegsiterLobby[]>([]);
   const [maps, setMaps] = useState<Map[]>([]);
   const [newMapName, setNewMapName] = useState("");
   const [gameStartDate, setGameStartDate] = useState("");
@@ -70,11 +130,18 @@ export default function DashboardPage() {
   const [editMap, setEditMap] = useState<Map | null>(null);
   const [openEditDialog, setOpenEditDialog] = useState(false);
   const [openAddDialog, setOpenAddDialog] = useState(false);
+  const [mapFilter, setMapFilter] = useState("");
+  const [dateFilter, setDateFilter] = useState("");
+  const [lobbyTypeFilter, setLobbyTypeFilter] = useState("");
+  const [value, setValue] = React.useState(0);
 
+  const handleChange = (event: React.SyntheticEvent, newValue: number) => {
+    setValue(newValue);
+  };
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      if (!localStorage.getItem('Admin')) {
-        window.location.href = '/';
+    if (typeof window !== "undefined") {
+      if (!localStorage.getItem("Admin")) {
+        window.location.href = "/";
       }
     }
   }, []);
@@ -88,12 +155,31 @@ export default function DashboardPage() {
         const fetchedMaps = await getMaps();
         setMaps(fetchedMaps);
       } catch (error) {
-        console.error("Error fetching dashboard data: ", error);
+        toast.error("Error fetching dashboard data: ");
       }
     };
 
     fetchData();
-    const interval = setInterval(fetchData, 30000); // Refresh every 30 seconds
+    const interval = setInterval(fetchData, 3000); // Refresh every 30 seconds
+
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const usersLobby = await getRegisteredLobby();
+        setRegisteredLobby(usersLobby);
+
+        const fetchedMaps = await getMaps();
+        setMaps(fetchedMaps);
+      } catch (error) {
+        toast.error("Error fetching dashboard data: ");
+      }
+    };
+
+    fetchData();
+    const interval = setInterval(fetchData, 3000); // Refresh every 30 seconds
 
     return () => clearInterval(interval);
   }, []);
@@ -112,7 +198,7 @@ export default function DashboardPage() {
         )
       );
     } catch (error) {
-      console.error("Error updating game permission: ", error);
+      toast.error("Error updating game permission: ");
     }
   };
 
@@ -120,7 +206,7 @@ export default function DashboardPage() {
     const file = event.target.files?.[0];
     if (file) {
       setSelectedFile(file);
-      console.log(`Selected file: ${file.name}`);
+      toast.success(`Selected file: ${file.name}`);
     } else {
       setSelectedFile(null);
     }
@@ -130,18 +216,18 @@ export default function DashboardPage() {
     if (!text) return text;
     return text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
   };
-  
+
   const formattedPlayersNumber = capitalizeFirstLetter(playersNumber);
 
   const handleAddMap = async (e: React.FormEvent) => {
     e.preventDefault();
-  
+
     if (selectedFile) {
       try {
         const imageUrl = await uploadFile(selectedFile);
         if (imageUrl) {
           // Capitalize the first letter of playersNumber
-  
+
           await addMap(
             newMapName,
             imageUrl,
@@ -150,7 +236,7 @@ export default function DashboardPage() {
             gameStartTime,
             formattedPlayersNumber
           );
-  
+
           const newMap: Map = {
             id: uuidv4(), // Generate a unique ID
             name: newMapName,
@@ -169,18 +255,16 @@ export default function DashboardPage() {
           setGameStartTime("");
           setPlayersNumber("");
           setSelectedFile(null); // Reset the selected file
-  
+
           // Show success notification
           toast.success("Map added successfully!");
         } else {
-          console.error("Failed to get image URL");
+          toast.error("Failed to get image URL");
         }
       } catch (error) {
-        console.error("Error adding new map: ", error);
         toast.error("Failed to add map.");
       }
     } else {
-      console.error("No file selected");
       toast.error("Please select a file.");
     }
   };
@@ -191,12 +275,12 @@ export default function DashboardPage() {
     setGameStartDate(map.gameStartDate);
     setGameStartTime(map.gameStartTime);
     setTelegramLink(map.telegramLink);
-    setPlayersNumber(formattedPlayersNumber)
+    setPlayersNumber(formattedPlayersNumber);
     setOpenEditDialog(true);
   };
 
   const handleUpdateMap = async (e: React.FormEvent) => {
-    e.preventDefault(); 
+    e.preventDefault();
 
     if (editMap) {
       try {
@@ -204,7 +288,7 @@ export default function DashboardPage() {
         if (selectedFile) {
           imageUrl = await uploadFile(selectedFile);
           if (!imageUrl) {
-            console.error("Failed to get image URL");
+            toast.error("Failed to get image URL");
             return;
           }
         }
@@ -217,8 +301,6 @@ export default function DashboardPage() {
           gameStartTime: gameStartTime || editMap.gameStartTime,
           telegramLink: telegramLink || editMap.telegramLink,
           playersNumber: formattedPlayersNumber || editMap.playersNumber,
-          
-
         });
 
         setMaps((prevMaps) =>
@@ -276,334 +358,679 @@ export default function DashboardPage() {
       toast.error("Failed to delete map.");
     }
   };
+  const colors = [
+    "#e0f7fa", // Light cyan
+    "#ffccbc", // Light orange
+    "#dcedc8", // Light green
+    "#f8bbd0", // Light pink
+    "#c5cae9", // Light blue
+    "#fdd835", // Yellow
+    "#ab47bc", // Purple
+    "#ff7043", // Deep orange
+    "#64b5f6", // Light blue
+    "#4caf50", // Green
+    "#f44336", // Red
+    "#9c27b0", // Purple
+    "#03a9f4", // Light blue
+    "#c2185b", // Pink
+    "#8bc34a", // Green
+    "#ffeb3b", // Yellow
+    "#ff5722", // Deep orange
+    "#9e9e9e", // Grey
+    "#673ab7", // Deep purple
+    "#009688", // Teal
+  ];
 
+  const getUserIdByEmail = async (email: string) => {
+    const usersRef = ref(realTimeDB, "users"); // Foydalanuvchi ma'lumotlari saqlanadigan yo'l
+    const q = query(usersRef, orderByChild("email"), equalTo(email));
+    const snapshot = await get(q);
+
+    if (snapshot.exists()) {
+      const userData = snapshot.val();
+      const userId = Object.keys(userData)[0]; // Birinchi foydalanuvchi ID sini olish
+      return userId;
+    } else {
+      console.error("User not found");
+      return null;
+    }
+  };
+
+  // Xabar yuborish funksiyasi
+  const sendMessageToUser = async (userId: string, registrationUrl: string) => {
+    try {
+      if (!userId) {
+        throw new Error("User ID is required");
+      }
+      const message = `Hello, this is a message from admin ${registrationUrl}`;
+      const messagesRef = ref(realTimeDB, `messages/${userId}`);
+      const newMessageRef = push(messagesRef); // Yangi unique reference yaratish
+
+      const messageData = {
+        content: message,
+        timestamp: Date.now(),
+      };
+
+      // Xabar malumotlarini loglash
+      await set(newMessageRef, messageData);
+
+      toast.success("Message sent message successfully");
+    } catch (error) {
+      // Xatolikni loglash
+      toast.error("Error sending message:");
+    }
+  };
+
+  // Xabarni tugma bosilganda yuborish
+  const handleSendMessage = async (email: string, registrationUrl: string) => {
+    console.log(
+      "Handling send message with email:",
+      email,
+      "and registration URL:",
+      registrationUrl
+    );
+    try {
+      const userId = await getUserIdByEmail(email);
+
+      if (userId) {
+        await sendMessageToUser(userId, registrationUrl);
+      } else {
+        toast.error("No user ID available to send a message.");
+      }
+    } catch (error) {
+      toast.error("Error handling send message:");
+    }
+  };
   return (
-    <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "40px 0" }}>
-      <ToastContainer />
-      <Grid
-        container
-        justifyContent="space-between"
-        alignItems="center"
-        style={{ marginBottom: "32px" }}
-      >
-        <Typography variant="h4" component="h1" fontWeight="bold">
-          Admin Dashboard
-        </Typography>
-        <Button variant="contained" color="primary" onClick={handleLogout}>
-          Logout
-        </Button>
-      </Grid>
-
-      <Grid container spacing={3} style={{ marginBottom: "32px" }}>
-        <Grid item xs={12} md={6}>
-          <Card>
-            <CardHeader title="Registered Users" />
-            <CardContent>
-              <Typography variant="h3" component="div" fontWeight="bold">
-                {registeredUsers.length}
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} md={6}>
-          <Card>
-            <CardHeader title="Online Users" />
-            <CardContent>
-              <Typography variant="h3" component="div" fontWeight="bold">
-                {registeredUsers.filter((user) => user.isOnline).length}
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
-
-      <Card style={{ marginBottom: "32px" }}>
-        <CardHeader title="User Management" />
-        <CardContent>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>#</TableCell>
-                <TableCell>User</TableCell>
-                <TableCell>Phone Number</TableCell>
-                <TableCell>Status</TableCell>
-                <TableCell>Game Permission</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {registeredUsers.map((user, index) => (
-                <TableRow key={user.id}>
-                  <TableCell>{index + 1}</TableCell>
-                  <TableCell>{user.name}</TableCell>
-                  <TableCell>{user.phone}</TableCell>
-                  <TableCell>{user.isOnline ? "Online" : "Offline"}</TableCell>
-                  <TableCell>
-                    <Switch
-                      checked={user.hasGamePermission}
-                      onChange={() =>
-                        handlePermissionToggle(user.id, !user.hasGamePermission)
-                      }
-                    />
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader title="Maps Management" />
-        <CardContent>
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={() => setOpenAddDialog(true)}
-          >
-            Add Map
+    <>
+      <div className="p-5">
+        <ToastContainer />
+        <Grid2
+          container
+          justifyContent="space-between"
+          alignItems="center"
+          style={{ marginBottom: "32px" }}
+        >
+          <Typography variant="h4" component="h1" fontWeight="bold">
+            Admin Dashboard
+          </Typography>
+          <Button variant="contained" color="primary" onClick={handleLogout}>
+            Logout
           </Button>
+        </Grid2>
 
-          <Grid container spacing={2} style={{ marginTop: "16px" }}>
-            {maps.map((map) => (
-              <Grid item xs={12} sm={6} md={4} key={map.id}>
-                <Card
-                  style={{
-                    boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
-                    borderRadius: "8px",
-                  }}
-                >
-                  <CardHeader
-                    title={map.name}
-                    titleTypographyProps={{ variant: "h6", noWrap: true }}
-                    style={{ backgroundColor: "#f5f5f5" }}
-                  />
+        <Box
+          width={"100%"}
+          sx={{
+            flexGrow: 1,
+            bgcolor: "background.paper",
+            display: "flex",
+          }}
+        >
+          <Tabs
+            orientation="vertical"
+            variant="scrollable"
+            value={value}
+            onChange={handleChange}
+            aria-label="Vertical tabs example"
+            sx={{ borderRight: 1, borderColor: "divider" }}
+          >
+            <Tab label="Dashboard" {...a11yProps(0)} />
+            <Tab label="All Users" {...a11yProps(1)} />
+            <Tab label="Add Maps" {...a11yProps(2)} />
+            <Tab label="Registered to Lobby" {...a11yProps(3)} />
+            <Tab label="Item Five" {...a11yProps(4)} />
+            <Tab label="Item Six" {...a11yProps(5)} />
+            <Tab label="Item Seven" {...a11yProps(6)} />
+          </Tabs>
+          <TabPanel value={value} index={0}>
+            <div className="grid grid-cols-2 gap-4" style={{ marginBottom: "32px" }}>
+                <Card>
+                  <CardHeader title="Registered Users" />
                   <CardContent>
-                    <Image
-                      src={map.imageUrl}
-                      alt={map.name}
-                      style={{
-                        width: "100%",
-                        height: "auto",
-                        borderRadius: "4px",
-                      }}
-                    />
-                    <Box mt={2}>
-                      <Typography variant="body1" gutterBottom>
-                        Start Date: <strong>{map.gameStartDate}</strong>
-                      </Typography>
-                      <Typography variant="body1" gutterBottom>
-                        Start Time: <strong>{map.gameStartTime}</strong>
-                      </Typography>
-                      <Typography variant="body1" gutterBottom>
-                        Players Number: <strong>{map.playersNumber}</strong>
-                      </Typography>
-                      <Typography variant="body1" gutterBottom>
-                        Telegram Link:{" "}
-                        <a
-                          href={map.telegramLink}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          {map.telegramLink}
-                        </a>
-                      </Typography>
-                    </Box>
-                    <Box mt={2}>
-                      <Button
-                        variant="contained"
-                        color="primary"
-                        style={{ marginRight: "8px" }}
-                        onClick={() => handleEditMap(map)}
-                      >
-                        Edit
-                      </Button>
-                      <Button
-                        variant="contained"
-                        color="secondary"
-                        onClick={() => handleDeleteMap(map.id)}
-                      >
-                        Delete
-                      </Button>
-                    </Box>
+                    <Typography variant="h3" component="div" fontWeight="bold">
+                      {registeredUsers.length}
+                    </Typography>
                   </CardContent>
                 </Card>
-              </Grid>
-            ))}
-          </Grid>
-        </CardContent>
-      </Card>
-
-      {/* Add Map Dialog */}
-      <Dialog
-        open={openAddDialog}
-        onClose={() => setOpenAddDialog(false)}
-        fullWidth
-        maxWidth="sm"
-      >
-        <DialogTitle>Add New Map</DialogTitle>
-        <DialogContent>
-          <form onSubmit={handleAddMap}>
-            <FormControl fullWidth margin="normal" variant="outlined">
-              <TextField
-                label="Map Name"
-                value={newMapName}
-                onChange={(e) => setNewMapName(e.target.value)}
-                required
-                margin="normal"
-                variant="outlined"
-              />
-              <TextField
-                label="Game Start Date"
-                type="date"
-                value={gameStartDate}
-                onChange={(e) => setGameStartDate(e.target.value)}
-                InputLabelProps={{
-                  shrink: true,
-                }}
-                required
-                margin="normal"
-                variant="outlined"
-              />
-              <TextField
-                label="Game Start Time"
-                type="time"
-                value={gameStartTime}
-                onChange={(e) => setGameStartTime(e.target.value)}
-                InputLabelProps={{
-                  shrink: true,
-                }}
-                required
-                margin="normal"
-                variant="outlined"
-              />
-              <TextField
-                label="Players Number"
-                value={playersNumber}
-                onChange={(e) => setPlayersNumber(e.target.value)}
-                required
-                margin="normal"
-                variant="outlined"
-              />
-              <TextField
-                label="Telegram Link"
-                value={telegramLink}
-                onChange={(e) => setTelegramLink(e.target.value)}
-                required
-                margin="normal"
-                variant="outlined"
-              />
-              <div style={{ marginTop: "16px" }}>
-                <input
-                  type="file"
-                  onChange={handleFileChange}
-                  accept="image/*"
-                  required
-                  style={{ display: "block", width: "100%" }}
-                />
+                <Card>
+                  <CardHeader title="Online Users" />
+                  <CardContent>
+                    <Typography variant="h3" component="div" fontWeight="bold">
+                      {registeredUsers.filter((user) => user.isOnline).length}
+                    </Typography>
+                  </CardContent>
+                </Card>
               </div>
-            </FormControl>
-            <DialogActions>
-              <Button type="submit" color="primary" variant="contained">
-                Add Map
-              </Button>
-              <Button
-                onClick={() => setOpenAddDialog(false)}
-                color="secondary"
-                variant="outlined"
-              >
-                Cancel
-              </Button>
-            </DialogActions>
-          </form>
-        </DialogContent>
-      </Dialog>
-
-      {/* Edit Map Dialog */}
-      {/* Edit Map Dialog */}
-      {editMap && (
-        <Dialog
-          open={openEditDialog}
-          onClose={() => setOpenEditDialog(false)}
-          fullWidth
-          maxWidth="sm"
-        >
-          <DialogTitle>Edit Map</DialogTitle>
-          <DialogContent>
-            <form onSubmit={handleUpdateMap}>
-              <FormControl fullWidth margin="normal" variant="outlined">
-                <TextField
-                  label="Map Name"
-                  value={newMapName}
-                  onChange={(e) => setNewMapName(e.target.value)}
-                  required
-                  margin="normal"
-                  variant="outlined"
-                />
-                <TextField
-                  label="Game Start Date"
-                  type="date"
-                  value={gameStartDate}
-                  onChange={(e) => setGameStartDate(e.target.value)}
-                  InputLabelProps={{
-                    shrink: true,
-                  }}
-                  required
-                  margin="normal"
-                  variant="outlined"
-                />
-                <TextField
-                  label="Game Start Time"
-                  type="time"
-                  value={gameStartTime}
-                  onChange={(e) => setGameStartTime(e.target.value)}
-                  InputLabelProps={{
-                    shrink: true,
-                  }}
-                  required
-                  margin="normal"
-                  variant="outlined"
-                />
-                <TextField
-                  label="Players Number"
-                  value={playersNumber}
-                  onChange={(e) => setPlayersNumber(e.target.value)}
-                  required
-                  margin="normal"
-                  variant="outlined"
-                />
-                <TextField
-                  label="Telegram Link"
-                  value={telegramLink}
-                  onChange={(e) => setTelegramLink(e.target.value)}
-                  required
-                  margin="normal"
-                  variant="outlined"
-                />
-                <div style={{ marginTop: "16px" }}>
-                  <input
-                    type="file"
-                    onChange={handleFileChange}
-                    accept="image/*"
-                    style={{ display: "block", width: "100%" }}
-                  />
-                </div>
-              </FormControl>
-              <DialogActions>
-                <Button type="submit" color="primary" variant="contained">
-                  Update Map
-                </Button>
+          </TabPanel>
+          <TabPanel value={value} index={1}>
+            <Card style={{ marginBottom: "32px" }}>
+              <CardHeader title="User Management" />
+              <CardContent>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>#</TableCell>
+                      <TableCell>User</TableCell>
+                      <TableCell>Phone Number</TableCell>
+                      <TableCell>Status</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {registeredUsers.map((user, index) => (
+                      <TableRow key={user.id}>
+                        <TableCell>{index + 1}</TableCell>
+                        <TableCell>{user.name}</TableCell>
+                        <TableCell>{user.phone}</TableCell>
+                        <TableCell>
+                          {user.isOnline ? "Online" : "Offline"}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabPanel>
+          <TabPanel value={value} index={2}>
+            <Card>
+              <CardHeader title="Maps Management" />
+              <CardContent>
                 <Button
-                  onClick={() => setOpenEditDialog(false)}
-                  color="secondary"
-                  variant="outlined"
+                  variant="contained"
+                  color="primary"
+                  onClick={() => setOpenAddDialog(true)}
                 >
-                  Cancel
+                  Add Map
                 </Button>
-              </DialogActions>
-            </form>
-          </DialogContent>
-        </Dialog>
-      )}
-    </div>
+
+                <div className="grid xl:grid-cols-4 md:grid-cols-2 gap-4"   style={{ marginTop: "16px" }}>
+                  {maps.map((map) => (
+                    <div className="" key={map.id}>
+                      <Card
+                        style={{
+                          boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+                          borderRadius: "8px",
+                        }}
+                      >
+                        <CardHeader
+                          title={map.name}
+                          titleTypographyProps={{ variant: "h6", noWrap: true }}
+                          style={{ backgroundColor: "#f5f5f5" }}
+                        />
+                        <CardContent>
+                          <Image
+                            src={map.imageUrl}
+                            alt={map.name}
+                            width={100}
+                            height={100}
+                            style={{
+                              width: "100%",
+                              height: "100%",
+                              borderRadius: "4px",
+                            }}
+                          />
+                          <Box mt={2}>
+                            <Typography variant="body1" gutterBottom>
+                              Start Date: <strong>{map.gameStartDate}</strong>
+                            </Typography>
+                            <Typography variant="body1" gutterBottom>
+                              Start Time: <strong>{map.gameStartTime}</strong>
+                            </Typography>
+                            <Typography variant="body1" gutterBottom>
+                              Players Number:{" "}
+                              <strong>{map.playersNumber}</strong>
+                            </Typography>
+                            <Typography variant="body1" gutterBottom>
+                              Telegram Link:{" "}
+                              <a
+                                href={map.telegramLink}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                {map.telegramLink}
+                              </a>
+                            </Typography>
+                          </Box>
+                          <Box mt={2}>
+                            <Button
+                              variant="contained"
+                              color="primary"
+                              style={{ marginRight: "8px" }}
+                              onClick={() => handleEditMap(map)}
+                            >
+                              Edit
+                            </Button>
+                            <Button
+                              variant="contained"
+                              color="secondary"
+                              onClick={() => handleDeleteMap(map.id)}
+                            >
+                              Delete
+                            </Button>
+                          </Box>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Dialog
+              open={openAddDialog}
+              onClose={() => setOpenAddDialog(false)}
+              fullWidth
+              maxWidth="sm"
+            >
+              <DialogTitle>Add New Map</DialogTitle>
+              <DialogContent>
+                <form onSubmit={handleAddMap}>
+                  <FormControl fullWidth margin="normal" variant="outlined">
+                    <TextField
+                      label="Map Name"
+                      value={newMapName}
+                      onChange={(e) => setNewMapName(e.target.value)}
+                      required
+                      margin="normal"
+                      variant="outlined"
+                    />
+                    <TextField
+                      label="Game Start Date"
+                      type="date"
+                      value={gameStartDate}
+                      onChange={(e) => setGameStartDate(e.target.value)}
+                      InputLabelProps={{
+                        shrink: true,
+                      }}
+                      required
+                      margin="normal"
+                      variant="outlined"
+                    />
+                    <TextField
+                      label="Game Start Time"
+                      type="time"
+                      value={gameStartTime}
+                      onChange={(e) => setGameStartTime(e.target.value)}
+                      InputLabelProps={{
+                        shrink: true,
+                      }}
+                      required
+                      margin="normal"
+                      variant="outlined"
+                    />
+                    <label id="players-number-label">Players Number</label>
+                    <Select
+                      labelId="players-number-label"
+                      value={playersNumber}
+                      onChange={(e) => setPlayersNumber(e.target.value)}
+                      label="Players Number"
+                    >
+                      <MenuItem value="Solo">Solo</MenuItem>
+                      <MenuItem value="Duo">Duo</MenuItem>
+                      <MenuItem value="Squad">Squad</MenuItem>
+                    </Select>
+
+                    <TextField
+                      label="Telegram Link"
+                      value={telegramLink}
+                      onChange={(e) => setTelegramLink(e.target.value)}
+                      required
+                      margin="normal"
+                      variant="outlined"
+                    />
+                    <div style={{ marginTop: "16px" }}>
+                      <input
+                        type="file"
+                        onChange={handleFileChange}
+                        accept="image/*"
+                        required
+                        style={{ display: "block", width: "100%" }}
+                      />
+                    </div>
+                  </FormControl>
+                  <DialogActions>
+                    <Button type="submit" color="primary" variant="contained">
+                      Add Map
+                    </Button>
+                    <Button
+                      onClick={() => setOpenAddDialog(false)}
+                      color="secondary"
+                      variant="outlined"
+                    >
+                      Cancel
+                    </Button>
+                  </DialogActions>
+                </form>
+              </DialogContent>
+            </Dialog>
+
+            {editMap && (
+              <Dialog
+                open={openEditDialog}
+                onClose={() => setOpenEditDialog(false)}
+                fullWidth
+                maxWidth="sm"
+              >
+                <DialogTitle>Edit Map</DialogTitle>
+                <DialogContent>
+                  <form onSubmit={handleUpdateMap}>
+                    <FormControl fullWidth margin="normal" variant="outlined">
+                      <TextField
+                        label="Map Name"
+                        value={newMapName}
+                        onChange={(e) => setNewMapName(e.target.value)}
+                        required
+                        margin="normal"
+                        variant="outlined"
+                      />
+                      <TextField
+                        label="Game Start Date"
+                        type="date"
+                        value={gameStartDate}
+                        onChange={(e) => setGameStartDate(e.target.value)}
+                        InputLabelProps={{
+                          shrink: true,
+                        }}
+                        required
+                        margin="normal"
+                        variant="outlined"
+                      />
+                      <TextField
+                        label="Game Start Time"
+                        type="time"
+                        value={gameStartTime}
+                        onChange={(e) => setGameStartTime(e.target.value)}
+                        InputLabelProps={{
+                          shrink: true,
+                        }}
+                        required
+                        margin="normal"
+                        variant="outlined"
+                      />
+                      <label id="players-number-label">Players Number</label>
+                      <Select
+                        labelId="players-number-label"
+                        value={playersNumber}
+                        onChange={(e) => setPlayersNumber(e.target.value)}
+                        label="Players Number"
+                      >
+                        <MenuItem value="Solo">Solo</MenuItem>
+                        <MenuItem value="Duo">Duo</MenuItem>
+                        <MenuItem value="Squad">Squad</MenuItem>
+                      </Select>
+                      <TextField
+                        label="Telegram Link"
+                        value={telegramLink}
+                        onChange={(e) => setTelegramLink(e.target.value)}
+                        required
+                        margin="normal"
+                        variant="outlined"
+                      />
+                      <div style={{ marginTop: "16px" }}>
+                        <input
+                          type="file"
+                          onChange={handleFileChange}
+                          accept="image/*"
+                          style={{ display: "block", width: "100%" }}
+                        />
+                      </div>
+                    </FormControl>
+                    <DialogActions>
+                      <Button type="submit" color="primary" variant="contained">
+                        Update Map
+                      </Button>
+                      <Button
+                        onClick={() => setOpenEditDialog(false)}
+                        color="secondary"
+                        variant="outlined"
+                      >
+                        Cancel
+                      </Button>
+                    </DialogActions>
+                  </form>
+                </DialogContent>
+              </Dialog>
+            )}
+          </TabPanel>
+          <TabPanel value={value} index={3}>
+            <Card sx={{ mb: 4, boxShadow: 3 }}>
+              <CardHeader
+                title="Registered to Lobby"
+                titleTypographyProps={{
+                  variant: "h5",
+                  fontWeight: "bold",
+                  color: "primary.main",
+                }}
+                sx={{ backgroundColor: "#f5f5f5", padding: 2 }}
+              />
+              <CardContent>
+                <div
+                  style={{ marginBottom: "16px", display: "flex", gap: "16px" }}
+                >
+                  <Select
+                    labelId="map-filter-label"
+                    value={mapFilter}
+                    onChange={(e) => setMapFilter(e.target.value)}
+                    displayEmpty
+                    inputProps={{ "aria-label": "Filter by map" }}
+                    sx={{ minWidth: 120 }}
+                  >
+                    <MenuItem value="">All Maps</MenuItem>
+                    {/* Replace with dynamic map options */}
+                    {Array.from(
+                      new Set(registeredLobby.map((lobby) => lobby.map))
+                    ).map((map) => (
+                      <MenuItem key={uuidv4()} value={map}>
+                        {map}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                  <Select
+                    labelId="lobby-type-filter-label"
+                    value={lobbyTypeFilter}
+                    onChange={(e) => setLobbyTypeFilter(e.target.value)}
+                    displayEmpty
+                    inputProps={{ "aria-label": "Filter by lobby type" }}
+                    sx={{ minWidth: 120 }}
+                  >
+                    <MenuItem value="">All Lobby Types</MenuItem>
+                    {/* Replace with dynamic lobby type options */}
+                    {Array.from(
+                      new Set(registeredLobby.map((lobby) => lobby.lobbyType))
+                    ).map((type) => (
+                      <MenuItem key={uuidv4()} value={type}>
+                        {type}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                  <Select
+                    labelId="date-filter-label"
+                    value={dateFilter}
+                    onChange={(e) => setDateFilter(e.target.value)}
+                    displayEmpty
+                    inputProps={{ "aria-label": "Filter by date" }}
+                    sx={{ minWidth: 120 }}
+                  >
+                    <MenuItem value="">All Dates</MenuItem>
+                    {/* Replace with dynamic date options */}
+                    {Array.from(
+                      new Set(registeredLobby.map((lobby) => lobby.date))
+                    ).map((date) => (
+                      <MenuItem key={uuidv4()} value={date}>
+                        {date}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </div>
+                {_.map(
+                  _.groupBy(
+                    registeredLobby.filter(
+                      (lobbyWrapper) =>
+                        (mapFilter ? lobbyWrapper.map === mapFilter : true) &&
+                        (dateFilter
+                          ? lobbyWrapper.date === dateFilter
+                          : true) &&
+                        (lobbyTypeFilter
+                          ? lobbyWrapper.lobbyType === lobbyTypeFilter
+                          : true)
+                    ),
+                    (lobbyWrapper: any) =>
+                      `${lobbyWrapper.map}-${lobbyWrapper.lobbyType}-${lobbyWrapper.date}`
+                  ),
+
+                  (groupedLobbies: any, key: any) => (
+                    <div
+                      key={uuidv4()}
+                      style={{
+                        marginBottom: "24px",
+                        padding: "16px",
+                        borderRadius: "8px",
+                        backgroundColor: "#fafafa",
+                      }}
+                    >
+                      <Typography
+                        variant="h6"
+                        gutterBottom
+                        sx={{ color: "secondary.main", fontWeight: "bold" }}
+                      >
+                        {groupedLobbies[0].lobbyType} - {groupedLobbies[0].map}{" "}
+                        - {groupedLobbies[0].date}
+                      </Typography>
+                      <Table>
+                        <TableHead>
+                          <TableRow sx={{ backgroundColor: "#e0e0e0" }}>
+                            <TableCell
+                              sx={{ fontWeight: "bold", color: "text.primary" }}
+                            >
+                              #
+                            </TableCell>
+                            <TableCell
+                              sx={{ fontWeight: "bold", color: "text.primary" }}
+                            >
+                              Full Name
+                            </TableCell>
+                            <TableCell
+                              sx={{ fontWeight: "bold", color: "text.primary" }}
+                            >
+                              Email
+                            </TableCell>
+                            <TableCell
+                              sx={{ fontWeight: "bold", color: "text.primary" }}
+                            >
+                              Phone Number
+                            </TableCell>
+                            <TableCell
+                              sx={{ fontWeight: "bold", color: "text.primary" }}
+                            >
+                              PUBG ID
+                            </TableCell>
+                            <TableCell
+                              sx={{ fontWeight: "bold", color: "text.primary" }}
+                            >
+                              Message
+                            </TableCell>
+                          </TableRow>
+                        </TableHead>
+                        <TableBody>
+                          {groupedLobbies.flatMap(
+                            (lobbyWrapper: any, lobbyIndex: any) =>
+                              lobbyWrapper.players.map(
+                                (player: any, playerIndex: any) => (
+                                  <TableRow
+                                    key={uuidv4()}
+                                    sx={{
+                                      backgroundColor:
+                                        playerIndex % 2 === 0
+                                          ? "#f9f9f9"
+                                          : "#ffffff",
+                                    }}
+                                  >
+                                    <TableCell
+                                      sx={{
+                                        fontWeight: "bold",
+                                        backgroundColor:
+                                          colors[lobbyIndex % colors.length],
+                                        color: "text.primary",
+                                      }}
+                                    >
+                                      {lobbyIndex + 1}.{playerIndex + 1}
+                                    </TableCell>
+                                    <TableCell
+                                      sx={{
+                                        fontWeight: "bold",
+                                        backgroundColor:
+                                          colors[lobbyIndex % colors.length],
+                                        color: "text.primary",
+                                      }}
+                                    >
+                                      {player.fullName}
+                                    </TableCell>
+                                    <TableCell
+                                      sx={{
+                                        fontWeight: "bold",
+                                        backgroundColor:
+                                          colors[lobbyIndex % colors.length],
+                                        color: "text.primary",
+                                      }}
+                                    >
+                                      {player.email}
+                                    </TableCell>
+                                    <TableCell
+                                      sx={{
+                                        fontWeight: "bold",
+                                        backgroundColor:
+                                          colors[lobbyIndex % colors.length],
+                                        color: "text.primary",
+                                      }}
+                                    >
+                                      {player.phoneNumber}
+                                    </TableCell>
+                                    <TableCell
+                                      sx={{
+                                        fontWeight: "bold",
+                                        backgroundColor:
+                                          colors[lobbyIndex % colors.length],
+                                        color: "text.primary",
+                                      }}
+                                    >
+                                      {player.pubgId}
+                                    </TableCell>
+                                    <TableCell
+                                      sx={{
+                                        fontWeight: "bold",
+                                        backgroundColor:
+                                          colors[lobbyIndex % colors.length],
+                                        color: "text.primary",
+                                      }}
+                                    >
+                                      <Button
+                                        variant="contained"
+                                        color="primary"
+                                        onClick={() =>
+                                          handleSendMessage(
+                                            player.email,
+                                            groupedLobbies[0].registrationUrl
+                                          )
+                                        }
+                                      >
+                                        Send Message
+                                      </Button>
+                                    </TableCell>
+                                  </TableRow>
+                                )
+                              )
+                          )}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  )
+                )}
+              </CardContent>
+            </Card>
+          </TabPanel>
+        </Box>
+      </div>
+    </>
   );
 }

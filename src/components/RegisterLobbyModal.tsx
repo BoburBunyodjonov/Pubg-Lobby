@@ -9,16 +9,24 @@ export interface RegisterLobbyModalProps {
   open: boolean;
   onClose: () => void;
   lobbyType: "Solo" | "Duo" | "Squad";
+  map: string;
+  date: string;
+  registrationUrl: string;
 }
-
 const RegisterLobbyModal: React.FC<RegisterLobbyModalProps> = ({
   open,
   onClose,
   lobbyType,
+  map,
+  date,
+  registrationUrl,
 }) => {
   // Initialize players based on the lobby type
-  const initialPlayers = Array(lobbyType === "Solo" ? 1 : lobbyType === "Duo" ? 2 : 4).fill({
+  const initialPlayers = Array(
+    lobbyType === "Solo" ? 1 : lobbyType === "Duo" ? 2 : 4
+  ).fill({
     fullName: "",
+    email: "",
     pubgId: "",
     phoneNumber: "",
   });
@@ -36,10 +44,12 @@ const RegisterLobbyModal: React.FC<RegisterLobbyModalProps> = ({
 
   // Handle registration and reset form
   const handleRegister = async () => {
-    
     try {
       const lobbyRef = ref(realTimeDB, `lobbyRegister`);
       const lobbyData = {
+        map: map,
+        date: date,
+        registrationUrl,
         lobbyType,
         players,
         createdAt: new Date().toISOString(),
@@ -62,6 +72,9 @@ const RegisterLobbyModal: React.FC<RegisterLobbyModalProps> = ({
     }
   };
 
+  console.log(registrationUrl)
+
+
   return (
     <Modal open={open} onClose={onClose}>
       <Box
@@ -79,16 +92,16 @@ const RegisterLobbyModal: React.FC<RegisterLobbyModalProps> = ({
         }}
       >
         <IconButton
-      onClick={onClose}
-      sx={{
-        position: "absolute",
-        top: 8,
-        right: 8,
-        zIndex: 1, // Ensure the button is above the content
-      }}
-    >
-      <CircleX className="text-red-500" />
-    </IconButton>
+          onClick={onClose}
+          sx={{
+            position: "absolute",
+            top: 8,
+            right: 8,
+            zIndex: 1, // Ensure the button is above the content
+          }}
+        >
+          <CircleX className="text-red-500" />
+        </IconButton>
         <Typography variant="h6" component="h2" textAlign="center">
           {lobbyType} Registration
         </Typography>
@@ -107,6 +120,14 @@ const RegisterLobbyModal: React.FC<RegisterLobbyModalProps> = ({
                 onChange={(e) =>
                   handleChange(index, "fullName", e.target.value)
                 }
+              />
+              <TextField
+                fullWidth
+                label="Email"
+                variant="outlined"
+                margin="normal"
+                value={player.email}
+                onChange={(e) => handleChange(index, "email", e.target.value)}
               />
               <TextField
                 fullWidth
@@ -130,7 +151,7 @@ const RegisterLobbyModal: React.FC<RegisterLobbyModalProps> = ({
           ))}
         </Grid>
         <Button
-          onClick={handleRegister} 
+          onClick={handleRegister}
           className="w-full bg-yellow-600 text-white p-3 rounded-lg hover:bg-yellow-700 transition-colors duration-300 ease-in-out"
         >
           Register Lobby

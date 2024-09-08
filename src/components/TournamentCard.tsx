@@ -67,6 +67,7 @@ const lobbyType = convertToLobbyType(playersNumber);
     setIsModalOpen(false);
   };
 
+
   return (
     <Card className="overflow-hidden rounded-lg shadow-lg bg-gray-900 border border-gray-700">
       <CardHeader className="relative h-40">
@@ -85,15 +86,17 @@ const lobbyType = convertToLobbyType(playersNumber);
         <div className="space-y-2 text-gray-400">
           <CardDescription className="flex items-center">
             <CalendarIcon className="mr-2 h-6 w-6 text-yellow-500" />
-            <span>{date}</span>
+            <span className="text-yellow-500 font-bold ">Boshlanish sansi: </span>
+            <span className="ml-2 text-white">{date}</span>
           </CardDescription>
           <CardDescription className="flex items-center">
             <TimerIcon className="mr-2 h-6 w-6 text-yellow-500" />
-            <span>{time}</span>
+            <span className="text-yellow-500 font-bold ">Boshlanish vaqti: </span>
+            <span className="ml-2 text-white">{time}</span>
           </CardDescription>
           <CardDescription className="flex items-center">
             <Users className="mr-2 h-6 w-6 text-yellow-500" />
-            <span>{playersNumber}</span>
+            <span className="text-white">{playersNumber}</span>
           </CardDescription>
         </div>
       </CardContent>
@@ -105,7 +108,7 @@ const lobbyType = convertToLobbyType(playersNumber);
         Register Lobby
       </Button>
       </CardFooter>
-      <RegisterLobbyModal open={isModalOpen} onClose={handleCloseModal} lobbyType={LobbyType[playersNumber as keyof typeof LobbyType]} />
+      <RegisterLobbyModal registrationUrl={registrationUrl}  map={title} date={date} open={isModalOpen} onClose={handleCloseModal} lobbyType={LobbyType[playersNumber as keyof typeof LobbyType]} />
     </Card>
   );
 };

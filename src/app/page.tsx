@@ -10,6 +10,7 @@ import AirDrop from "../images/airdrop.png";
 import ImgBg from "../images/cf13d8d0bc89f5b9b02a5917f4b02135.jpg";
 import Header from "@/components/Header";
 import { Gamepad2, Headphones, Trophy, Users } from "lucide-react";
+import Link from "next/link";
 
 const styles = `
   @keyframes fadeIn {
@@ -168,9 +169,11 @@ export default function Home() {
                   </p>
                 </div>
                 <div className="space-x-4 animate-fadeInUp animation-delay-400">
-                  <Button className="animate-gunfire bg-[#DAA520]">
+                 <Link href='\tournaments'>
+                 <Button className="animate-gunfire bg-[#DAA520]">
                     Join Now
                   </Button>
+                 </Link>
                   <Button
                     className="border-[#DAA520] text-[#DAA520]"
                     variant="outline"
@@ -249,7 +252,9 @@ export default function Home() {
                     Be part of the fastest-growing PUBG Mobile community. Share your experiences, learn from others, and dominate the battleground together!
                   </p>
                 </div>
-                <Button className="animate-bounce">Sign Up Now</Button>
+               <Link href="/tournaments">
+                  <Button className="animate-bounce duration-700">Sign Up Now</Button>
+               </Link>
               </div>
             </div>
           </section>

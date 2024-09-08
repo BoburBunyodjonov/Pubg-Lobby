@@ -1,83 +1,287 @@
-'use client'
+"use client";
 
-import React, { useEffect, useState } from 'react'
-import { useRouter } from 'next/router'
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Button } from "@/components/ui/button"
-import { getParticipants, logoutUser, Participant } from '../../data/firebaseUtils'
+import { useState, useEffect } from "react";
+import { auth, realTimeDB } from "../../data/firebase"; // Ensure correct import
+import { ref, onValue, push, set, update } from "firebase/database";
+import { User } from "firebase/auth";
+import "react-toastify/dist/ReactToastify.css";
+import { ToastContainer, toast } from "react-toastify";
 
-export default function ParticipantsPage() {
-  const [participants, setParticipants] = useState<Participant[]>([])
+import {
+  Container,
+  Typography,
+  TextField,
+  Button,
+  Card,
+  CardContent,
+  List,
+  ListItem,
+  ListItemText,
+  Divider,
+  Grid,
+} from "@mui/material";
+import Layout from "@/components/Layout";
+
+// Define Message interface
+interface Message {
+  content: string;
+  timestamp: number;
+}
+
+// Define UserData interface
+interface UserData {
+  email: string;
+  name: string;
+  phone: string;
+  password: string;
+}
+
+const UserProfile = () => {
+  const [user, setUser] = useState<User | null>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [newMessage, setNewMessage] = useState("");
+  const [userData, setUserData] = useState<UserData | null>(null);
+  const [editMode, setEditMode] = useState(false);
 
   useEffect(() => {
-    const fetchParticipants = async () => {
-      try {
-        const fetchedParticipants = await getParticipants()
-        setParticipants(fetchedParticipants)
-      } catch (error) {
-        console.error("Error fetching participants: ", error)
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      if (user) {
+        setUser(user);
+        fetchMessages(user.uid);
+        fetchUserData(user.uid);
+      } else {
+        window.location.href = "/login"; // Redirect to login
       }
-    }
+    });
 
-    fetchParticipants()
-  }, [])
+    return () => unsubscribe();
+  }, []);
 
-  const handleLogout = async () => {
-    try {
-      await logoutUser()
-      window.location.href = '/login'
-    } catch (error) {
-      console.error("Error logging out: ", error)
+  const fetchMessages = (userId: string) => {
+    const messagesRef = ref(realTimeDB, `messages/${userId}`);
+    onValue(messagesRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        // Convert the object into an array of messages
+        const messagesArray: Message[] = Object.values(data);
+        setMessages(messagesArray);
+      } else {
+        setMessages([]); // If no data, clear the messages
+      }
+    });
+  };
+
+  const fetchUserData = (userId: string) => {
+    const userRef = ref(realTimeDB, `users/${userId}`);
+    onValue(userRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        setUserData({
+          email: data.email,
+          name: data.name,
+          phone: data.phone,
+          password: data.password,
+        });
+      }
+    });
+  };
+
+  const handleSendMessage = () => {
+    if (newMessage.trim() === "") return;
+
+    if (user) {
+      const messagesRef = ref(realTimeDB, `messages/${user.uid}`);
+      const newMessageRef = push(messagesRef);
+      const messageData = {
+        content: newMessage,
+        timestamp: Date.now(),
+      };
+
+      // Ensure messageData is properly defined
+      console.log("Sending message:", messageData);
+
+      set(newMessageRef, messageData)
+        .then(() => {
+          toast.success("Message sent successfully");
+          setNewMessage("");
+        })
+        .catch((error) => {
+          toast.error("Error sending message:", error);
+        });
+    } else {
+      toast.error("User is not authenticated.");
     }
-  }
+  };
+
+  const handleUpdateUserData = () => {
+    if (user && userData) {
+      const userRef = ref(realTimeDB, `users/${user.uid}`);
+      update(userRef, userData)
+        .then(() => {
+          console.log("User data updated successfully");
+          toast.success("User data updated successfully");
+          setEditMode(false);
+        })
+        .catch((error) => {
+          toast.error("Error updating user data:", error);
+        });
+    }
+  };
 
   return (
-    <div className="container mx-auto py-10 px-4">
-      <Card className="shadow-lg">
-        <CardHeader className="flex justify-between items-center bg-gray-800 text-white p-4 rounded-t-lg">
-          <CardTitle className="text-xl font-semibold">PUBG Mobile Tournament Participants</CardTitle>
-          <Button 
-            onClick={handleLogout}
-            className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded"
-          >
-            Logout
-          </Button>
-        </CardHeader>
-        <CardContent>
-          <Table className="w-full border border-gray-300 rounded-lg overflow-hidden">
-            <TableHeader className="bg-gray-100">
-              <TableRow>
-                <TableHead className="p-3 text-left text-gray-600">Player</TableHead>
-                <TableHead className="p-3 text-left text-gray-600">Name</TableHead>
-                <TableHead className="p-3 text-left text-gray-600">PUBG ID</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {participants.map((participant, index) => (
-                <TableRow 
-                  key={index}
-                  className="hover:bg-gray-50 cursor-pointer transition-colors"
-                >
-                  <TableCell className="p-3">
-                    <Avatar>
-                      <AvatarImage 
-                        src={`https://api.dicebear.com/6.x/initials/svg?seed=${participant.name}`} 
-                        alt={`${participant.name}'s avatar`} 
-                        className="w-12 h-12 rounded-full"
-                      />
-                      <AvatarFallback className="text-lg font-semibold">{participant.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-                    </Avatar>
-                  </TableCell>
-                  <TableCell className="p-3">{participant.name}</TableCell>
-                  <TableCell className="p-3">{participant.phone}</TableCell>
-                </TableRow>
+    <Layout>
+      <Container className="pt-20">
+        <ToastContainer />
+        <Typography variant="h4" fontWeight={700} component="h1" gutterBottom>
+          User Profile
+        </Typography>
+        <Card variant="outlined" sx={{ marginTop: 4 }}>
+          <CardContent>
+            <Typography variant="h6" gutterBottom>
+              User Information
+            </Typography>
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Full Name"
+                  variant="outlined"
+                  value={userData?.name || ""}
+                  onChange={(e) =>
+                    setUserData((prev) =>
+                      prev
+                        ? { ...prev, name: e.target.value }
+                        : {
+                            name: e.target.value,
+                            email: "",
+                            phone: "",
+                            password: "",
+                          }
+                    )
+                  }
+                  disabled={!editMode}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Email"
+                  variant="outlined"
+                  value={userData?.email || ""}
+                  onChange={(e) =>
+                    setUserData((prev) =>
+                      prev
+                        ? { ...prev, email: e.target.value }
+                        : {
+                            email: e.target.value,
+                            name: "",
+                            phone: "",
+                            password: "",
+                          }
+                    )
+                  }
+                  disabled={!editMode}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Phone Number"
+                  variant="outlined"
+                  value={userData?.phone || ""}
+                  onChange={(e) =>
+                    setUserData((prev) =>
+                      prev
+                        ? { ...prev, phone: e.target.value }
+                        : {
+                            phone: e.target.value,
+                            name: "",
+                            email: "",
+                            password: "",
+                          }
+                    )
+                  }
+                  disabled={!editMode}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Password"
+                  variant="outlined"
+                  value={userData?.password || ""}
+                  onChange={(e) =>
+                    setUserData((prev) =>
+                      prev
+                        ? { ...prev, password: e.target.value }
+                        : {
+                            password: e.target.value,
+                            phone: "",
+                            name: "",
+                            email: "",
+                          }
+                    )
+                  }
+                  disabled={!editMode}
+                />
+              </Grid>
+            </Grid>
+            {editMode ? (
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={handleUpdateUserData}
+                sx={{ marginTop: 2 }}
+              >
+                Save Changes
+              </Button>
+            ) : (
+              <Button
+                variant="contained"
+                color="secondary"
+                onClick={() => setEditMode(true)}
+                sx={{ marginTop: 2 }}
+              >
+                Edit Profile
+              </Button>
+            )}
+            <Typography variant="h6" gutterBottom sx={{ marginTop: 4 }}>
+              Messages
+            </Typography>
+            <List>
+              {messages.map((msg, index) => (
+                <div key={index}>
+                  <ListItem>
+                    <ListItemText
+                      primary={msg.content}
+                      secondary={new Date(msg.timestamp).toLocaleString()} // Show date and time
+                    />
+                  </ListItem>
+                  <Divider />
+                </div>
               ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-    </div>
-  )
-}
+            </List>
+            <TextField
+              fullWidth
+              variant="outlined"
+              placeholder="Type your message"
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              sx={{ marginTop: 2 }}
+            />
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={handleSendMessage}
+              sx={{ marginTop: 2 }}
+            >
+              Send
+            </Button>
+          </CardContent>
+        </Card>
+      </Container>
+    </Layout>
+  );
+};
+
+export default UserProfile;
