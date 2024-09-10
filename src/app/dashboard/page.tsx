@@ -913,7 +913,7 @@ export default function DashboardPage() {
                             <TableCell
                               sx={{ fontWeight: "bold", color: "text.primary" }}
                             >
-                              Email
+                              Team Name
                             </TableCell>
                             <TableCell
                               sx={{ fontWeight: "bold", color: "text.primary" }}
@@ -974,7 +974,7 @@ export default function DashboardPage() {
                                         color: "text.primary",
                                       }}
                                     >
-                                      {player.email}
+                                      {groupedLobbies[0].groupName}
                                     </TableCell>
                                     <TableCell
                                       sx={{
@@ -1004,12 +1004,13 @@ export default function DashboardPage() {
                                         color: "text.primary",
                                       }}
                                     >
+                                     
                                       <Button
                                         variant="contained"
                                         color="primary"
                                         onClick={() =>
                                           handleSendMessage(
-                                            player.email,
+                                            groupedLobbies[0].email,
                                             groupedLobbies[0].registrationUrl
                                           )
                                         }

@@ -170,7 +170,7 @@ const Header = () => {
             </Link>
             <Link
               className={`text-xl font-medium py-4 ${isActive('/schedule') ? 'text-blue-400' : 'text-white'} hover:text-blue-400`}
-              href="/news"
+              href="/schedule"
               onClick={() => setIsMobileMenuOpen(false)}
             >
               Schedule

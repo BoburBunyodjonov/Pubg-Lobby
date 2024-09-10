@@ -27,10 +27,11 @@ import { realTimeDB, auth } from './firebase';
     lobbyType: string;
     map: string;
     date: string;
+    email: string;
+    groupName: string;
     registrationUrl: string;
     players: {
       fullName: string;
-      email: string;
       phoneNumber: string;
       pubgId: string;
     }[];
@@ -49,13 +50,14 @@ import { realTimeDB, auth } from './firebase';
           createdAt: lobbyData[id].createdAt,
           lobbyType: lobbyData[id].lobbyType,
           map: lobbyData[id].map,
+          email: lobbyData[id].email,
           date: lobbyData[id].date,
+          groupName: lobbyData[id].groupName,
           registrationUrl: lobbyData[id].registrationUrl,
           players: lobbyData[id].players.map((player: any) => ({
             fullName: player.fullName,
             phoneNumber: player.phoneNumber,
             pubgId: player.pubgId,
-            email: player.email,
           }))
         }));
       } else {
@@ -115,7 +117,7 @@ import { realTimeDB, auth } from './firebase';
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
   
-      if (email === "admin12345@gmail.com" && password === "admin12345") {
+      if (email === "admin123@gmail.com" && password === "admin123") {
         window.location.href = "/dashboard";
       } else {
         throw new Error("Unauthorized");
