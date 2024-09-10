@@ -6,6 +6,7 @@ export interface GameMap {
     telegramLink: string;
     gameStartTime: string;
     playersNumber: string;
+    allowIsRegister: boolean;
   }
   interface UsageStats {
     date: string;

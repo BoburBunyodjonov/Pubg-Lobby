@@ -8,7 +8,7 @@ import {
   Grid,
   IconButton,
 } from "@mui/material";
-import { ref, push, onValue } from "firebase/database";
+import { ref, push, onValue, get } from "firebase/database";
 import { auth, realTimeDB } from "../data/firebase"; // Adjust the path
 import { toast } from "react-toastify";
 import { CircleX } from "lucide-react";
@@ -41,34 +41,86 @@ const RegisterLobbyModal: React.FC<RegisterLobbyModalProps> = ({
   ).fill({
     fullName: "",
     pubgId: "",
-    phoneNumber: ""
+    phoneNumber: "",
   });
 
   const [players, setPlayers] = useState(initialPlayers);
   const [user, setUser] = useState<User | null>(null);
   const [groupName, setGroupName] = useState("");
+  const [groupNameError, setGroupNameError] = useState(Boolean);
   // const [email, setEmail] = useState("");
   const [userData, setUserData] = useState<UserData | null>(null);
 
   // Handle change in input fields
-  const handleChange = (index: number, field: string, value: string) => {
-    setPlayers((prevPlayers) =>
-      prevPlayers.map((player, i) =>
-        i === index ? { ...player, [field]: value } : player
-      )
-    );
-  };
 
-  // Handle registration and reset form
   const handleRegister = async () => {
+    let hasError = false; // Track validation errors
+
+    // Check if the group name is empty
+    if (!groupName) {
+      setGroupNameError(true);
+      hasError = true;
+    } else {
+      setGroupNameError(false);
+    }
+
+    // Check if any player fields are empty
+    const updatedPlayers = players.map((player) => {
+      const newPlayer = { ...player, errors: {} };
+
+      if (!player.fullName) {
+        newPlayer.errors.fullName = "Toʻliq ism talab qilinadi";
+        hasError = true;
+      }
+
+      if (!player.pubgId) {
+        newPlayer.errors.pubgId = "PUBG ID talab qilinadi";
+        hasError = true;
+      }
+
+      if (!player.phoneNumber) {
+        newPlayer.errors.phoneNumber = "Telefon raqami kerak";
+        hasError = true;
+      }
+
+      return newPlayer;
+    });
+
+    // Update the players state with validation errors
+    setPlayers(updatedPlayers);
+
+    // If there's an error, stop the registration process
+    if (hasError) {
+      toast.error("Barcha kerakli maydonlarni toʻldiring.");
+      return;
+    }
+
+    // Proceed with registration if no errors
     try {
       const lobbyRef = ref(realTimeDB, `lobbyRegister`);
+      const snapshot = await get(lobbyRef);
+      let groupExists = false;
+
+      if (snapshot.exists()) {
+        const lobbyData = snapshot.val();
+        groupExists = Object.values(lobbyData).some(
+          (lobby: any) => lobby.groupName === groupName
+        );
+      }
+
+      if (groupExists) {
+        toast.error(
+          "Bu guruh nomi allaqachon olingan. Boshqa nom tanlang."
+        );
+        return;
+      }
+
       const lobbyData = {
         map: map,
         date: date,
         registrationUrl: registrationUrl,
         groupName: groupName,
-        email: userData?.email, 
+        email: userData?.email,
         lobbyType: lobbyType,
         players: players,
         createdAt: new Date().toISOString(),
@@ -78,17 +130,37 @@ const RegisterLobbyModal: React.FC<RegisterLobbyModalProps> = ({
       await push(lobbyRef, lobbyData);
 
       // Show success toast
-      toast.success("Players registered successfully!");
+      toast.success("O'yinchilar ro'yxatdan o'tishdi!");
 
       // Reset form
       setPlayers(initialPlayers);
-
-      // Close modal
+      setGroupName("");
       onClose();
     } catch (error) {
-      console.error("Error adding document: ", error);
-      toast.error("Failed to register players. Please try again.");
+      console.error("Hujjat qo‘shishda xatolik yuz berdi: ", error);
+      toast.error("O‘yinchilarni ro‘yxatdan o‘tkazib bo‘lmadi. Iltimos, qayta urinib koʻring.");
     }
+  };
+
+  // Handle input change and clear error for group name
+  const handleGroupNameChange = (e: any) => {
+    setGroupName(e.target.value);
+    if (groupNameError) setGroupNameError(false); // Clear error on input
+  };
+
+  // Handle input change for player fields and clear specific field error
+  const handlePlayerChange = (index: number, field: string, value: string) => {
+    const updatedPlayers = [...players];
+    updatedPlayers[index][field] = value;
+
+    // Clear the error for the specific field if a value is entered
+    if (updatedPlayers[index].errors) {
+      updatedPlayers[index].errors[field] = !value
+        ? `${field} majburiy, shart`
+        : "";
+    }
+
+    setPlayers(updatedPlayers);
   };
 
   useEffect(() => {
@@ -126,7 +198,6 @@ const RegisterLobbyModal: React.FC<RegisterLobbyModalProps> = ({
 
   return (
     <Modal open={open} onClose={onClose}>
-    
       <Box
         sx={{
           position: "absolute",
@@ -141,45 +212,24 @@ const RegisterLobbyModal: React.FC<RegisterLobbyModalProps> = ({
           p: 4,
         }}
       >
-        <IconButton
-          onClick={onClose}
-          sx={{
-            position: "absolute",
-            top: 8,
-            right: 8,
-            zIndex: 1, 
-          }}
-        >
-          <CircleX className="text-red-500" />
-        </IconButton>
         <Typography variant="h6" component="h2" textAlign="center">
           {lobbyType} Registration
         </Typography>
-        {/* {userData ? (
-        <div>
-         { userData.email}
-        </div>
-      ) : (
-        <p>Loading...</p>
-      )} */}
+
         <Box>
           <TextField
             fullWidth
             label="Group Name"
             variant="outlined"
             margin="normal"
+            required
+            error={groupNameError}
+            helperText={groupNameError ? "Guruh nomi talab qilinadi" : ""}
             value={groupName}
-            onChange={(e) => setGroupName(e.target.value)}
+            onChange={handleGroupNameChange}
           />
-          {/* <TextField
-            fullWidth
-            label="Email"
-            variant="outlined"
-            margin="normal"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          /> */}
         </Box>
+
         <Grid container spacing={3} sx={{ mt: 2 }}>
           {players.map((player, index) => (
             <Grid item xs={12} sm={lobbyType === "Solo" ? 12 : 6} key={index}>
@@ -191,9 +241,12 @@ const RegisterLobbyModal: React.FC<RegisterLobbyModalProps> = ({
                 label="Full Name"
                 variant="outlined"
                 margin="normal"
+                required
+                error={!!player.errors?.fullName}
+                helperText={player.errors?.fullName}
                 value={player.fullName}
                 onChange={(e) =>
-                  handleChange(index, "fullName", e.target.value)
+                  handlePlayerChange(index, "fullName", e.target.value)
                 }
               />
               <TextField
@@ -201,22 +254,31 @@ const RegisterLobbyModal: React.FC<RegisterLobbyModalProps> = ({
                 label="PUBG ID"
                 variant="outlined"
                 margin="normal"
+                required
+                error={!!player.errors?.pubgId}
+                helperText={player.errors?.pubgId}
                 value={player.pubgId}
-                onChange={(e) => handleChange(index, "pubgId", e.target.value)}
+                onChange={(e) =>
+                  handlePlayerChange(index, "pubgId", e.target.value)
+                }
               />
               <TextField
                 fullWidth
                 label="Phone Number"
                 variant="outlined"
                 margin="normal"
+                required
+                error={!!player.errors?.phoneNumber}
+                helperText={player.errors?.phoneNumber}
                 value={player.phoneNumber}
                 onChange={(e) =>
-                  handleChange(index, "phoneNumber", e.target.value)
+                  handlePlayerChange(index, "phoneNumber", e.target.value)
                 }
               />
             </Grid>
           ))}
         </Grid>
+
         <Button
           onClick={handleRegister}
           className="w-full bg-yellow-600 text-white p-3 rounded-lg hover:bg-yellow-700 transition-colors duration-300 ease-in-out"

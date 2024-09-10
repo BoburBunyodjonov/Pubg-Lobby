@@ -1,7 +1,7 @@
 "use client";
 
 import _ from "lodash";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { auth, realTimeDB } from "../../data/firebase"; // Ensure correct import
 import {
@@ -35,6 +35,9 @@ import {
   Tab,
   Select,
   MenuItem,
+  Tooltip,
+  FormControlLabel,
+  Switch,
 } from "@mui/material";
 // @ts-ignore
 import Grid from "@mui/material/Grid";
@@ -81,6 +84,7 @@ interface Map {
   telegramLink: string;
   gameStartTime: string;
   playersNumber: string;
+  allowIsRegister: boolean;
 }
 
 interface TabPanelProps {
@@ -125,6 +129,7 @@ export default function DashboardPage() {
   const [gameStartDate, setGameStartDate] = useState("");
   const [gameStartTime, setGameStartTime] = useState("");
   const [telegramLink, setTelegramLink] = useState("");
+  const [allowIsRegister, setAllowIsRegister] = useState<boolean>(false);
   const [playersNumber, setPlayersNumber] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [editMap, setEditMap] = useState<Map | null>(null);
@@ -184,29 +189,11 @@ export default function DashboardPage() {
     return () => clearInterval(interval);
   }, []);
 
-  const handlePermissionToggle = async (
-    userId: string,
-    newPermission: boolean
-  ) => {
-    try {
-      await updateGamePermission(userId, newPermission);
-      setRegisteredUsers((users) =>
-        users.map((user) =>
-          user.id === userId
-            ? { ...user, hasGamePermission: newPermission }
-            : user
-        )
-      );
-    } catch (error) {
-      toast.error("Error updating game permission: ");
-    }
-  };
-
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       setSelectedFile(file);
-      toast.success(`Selected file: ${file.name}`);
+      console.log(`Selected file: ${file.name}`);
     } else {
       setSelectedFile(null);
     }
@@ -234,7 +221,8 @@ export default function DashboardPage() {
             gameStartDate,
             telegramLink,
             gameStartTime,
-            formattedPlayersNumber
+            formattedPlayersNumber,
+            allowIsRegister
           );
 
           const newMap: Map = {
@@ -244,6 +232,7 @@ export default function DashboardPage() {
             gameStartDate,
             telegramLink,
             gameStartTime,
+            allowIsRegister,
             playersNumber: formattedPlayersNumber, // Use formatted value
           };
 
@@ -254,6 +243,7 @@ export default function DashboardPage() {
           setTelegramLink("");
           setGameStartTime("");
           setPlayersNumber("");
+          setAllowIsRegister(Boolean);
           setSelectedFile(null); // Reset the selected file
 
           // Show success notification
@@ -276,6 +266,7 @@ export default function DashboardPage() {
     setGameStartTime(map.gameStartTime);
     setTelegramLink(map.telegramLink);
     setPlayersNumber(formattedPlayersNumber);
+    setAllowIsRegister(map.allowIsRegister);
     setOpenEditDialog(true);
   };
 
@@ -301,6 +292,7 @@ export default function DashboardPage() {
           gameStartTime: gameStartTime || editMap.gameStartTime,
           telegramLink: telegramLink || editMap.telegramLink,
           playersNumber: formattedPlayersNumber || editMap.playersNumber,
+          allowIsRegister: allowIsRegister,
         });
 
         setMaps((prevMaps) =>
@@ -314,6 +306,7 @@ export default function DashboardPage() {
                   gameStartTime: gameStartTime || map.gameStartTime,
                   telegramLink: telegramLink || map.telegramLink,
                   playersNumber: formattedPlayersNumber || map.playersNumber,
+                  allowIsRegister: allowIsRegister || map.allowIsRegister,
                 }
               : map
           )
@@ -326,6 +319,7 @@ export default function DashboardPage() {
         setPlayersNumber("");
         setTelegramLink("");
         setSelectedFile(null);
+        setAllowIsRegister(false);
         setOpenEditDialog(false);
 
         toast.success("Map updated successfully!");
@@ -402,7 +396,7 @@ export default function DashboardPage() {
       if (!userId) {
         throw new Error("User ID is required");
       }
-      const message = `Hello, this is a message from admin ${registrationUrl}`;
+      const message = `Siz Lobby uchun ro'yxatdan o'tgansiz va shu lobby da qatnashish uchun havolani bosing va o'yinni boshlang. ${registrationUrl}`;
       const messagesRef = ref(realTimeDB, `messages/${userId}`);
       const newMessageRef = push(messagesRef); // Yangi unique reference yaratish
 
@@ -441,6 +435,36 @@ export default function DashboardPage() {
       toast.error("Error handling send message:");
     }
   };
+
+  const [tooltipText, setTooltipText] = useState("Click to copy");
+
+  const handleCopy = (text: any) => {
+    if (navigator.clipboard) {
+      navigator.clipboard
+        .writeText(text)
+        .then(() => {
+          setTooltipText("Copied!"); // Change tooltip text after copying
+          setTimeout(() => setTooltipText("Click to copy"), 2000); // Reset text after 2 seconds
+        })
+        .catch((err) => {
+          console.error("Failed to copy text: ", err);
+        });
+    } else {
+      const textarea = document.createElement("textarea");
+      textarea.value = text;
+      document.body.appendChild(textarea);
+      textarea.select();
+      try {
+        document.execCommand("copy");
+        setTooltipText("Copied!");
+        setTimeout(() => setTooltipText("Click to copy"), 2000);
+      } catch (err) {
+        console.error("Failed to copy text using fallback: ", err);
+      }
+      document.body.removeChild(textarea);
+    }
+  };
+
   return (
     <>
       <div className="p-5">
@@ -484,24 +508,27 @@ export default function DashboardPage() {
             <Tab label="Item Seven" {...a11yProps(6)} />
           </Tabs>
           <TabPanel value={value} index={0}>
-            <div className="grid grid-cols-2 gap-4" style={{ marginBottom: "32px" }}>
-                <Card>
-                  <CardHeader title="Registered Users" />
-                  <CardContent>
-                    <Typography variant="h3" component="div" fontWeight="bold">
-                      {registeredUsers.length}
-                    </Typography>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardHeader title="Online Users" />
-                  <CardContent>
-                    <Typography variant="h3" component="div" fontWeight="bold">
-                      {registeredUsers.filter((user) => user.isOnline).length}
-                    </Typography>
-                  </CardContent>
-                </Card>
-              </div>
+            <div
+              className="grid grid-cols-2 gap-4"
+              style={{ marginBottom: "32px" }}
+            >
+              <Card>
+                <CardHeader title="Registered Users" />
+                <CardContent>
+                  <Typography variant="h3" component="div" fontWeight="bold">
+                    {registeredUsers.length}
+                  </Typography>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader title="Online Users" />
+                <CardContent>
+                  <Typography variant="h3" component="div" fontWeight="bold">
+                    {registeredUsers.filter((user) => user.isOnline).length}
+                  </Typography>
+                </CardContent>
+              </Card>
+            </div>
           </TabPanel>
           <TabPanel value={value} index={1}>
             <Card style={{ marginBottom: "32px" }}>
@@ -543,8 +570,10 @@ export default function DashboardPage() {
                 >
                   Add Map
                 </Button>
-
-                <div className="grid xl:grid-cols-4 md:grid-cols-2 gap-4"   style={{ marginTop: "16px" }}>
+                <div
+                  className="grid xl:grid-cols-4 md:grid-cols-2 gap-4"
+                  style={{ marginTop: "16px" }}
+                >
                   {maps.map((map) => (
                     <div className="" key={map.id}>
                       <Card
@@ -679,6 +708,20 @@ export default function DashboardPage() {
                       margin="normal"
                       variant="outlined"
                     />
+                    <FormControlLabel
+                        control={
+                          <Switch
+                            checked={allowIsRegister}
+                            onChange={(e) => setAllowIsRegister(e.target.checked)}
+                            color="primary"
+                          />
+                        }
+                        label={
+                          allowIsRegister
+                            ? "Registrationni O'chirish"
+                            : "Registrationni Yoqish"
+                        }
+                      />
                     <div style={{ marginTop: "16px" }}>
                       <input
                         type="file"
@@ -766,6 +809,20 @@ export default function DashboardPage() {
                         required
                         margin="normal"
                         variant="outlined"
+                      />
+                      <FormControlLabel
+                        control={
+                          <Switch
+                            checked={allowIsRegister}
+                            onChange={(e) => setAllowIsRegister(e.target.checked)}
+                            color="primary"
+                          />
+                        }
+                        label={
+                          allowIsRegister
+                            ? "Registeratsiyani o'chirish"
+                            : "Registeratsiyani yoqish"
+                        }
                       />
                       <div style={{ marginTop: "16px" }}>
                         <input
@@ -923,6 +980,11 @@ export default function DashboardPage() {
                             <TableCell
                               sx={{ fontWeight: "bold", color: "text.primary" }}
                             >
+                              Email
+                            </TableCell>
+                            <TableCell
+                              sx={{ fontWeight: "bold", color: "text.primary" }}
+                            >
                               PUBG ID
                             </TableCell>
                             <TableCell
@@ -964,7 +1026,56 @@ export default function DashboardPage() {
                                         color: "text.primary",
                                       }}
                                     >
-                                      {player.fullName}
+                                      <Tooltip title={tooltipText} arrow>
+                                        <span
+                                          className="p-2 cursor-pointer select-none"
+                                          onClick={() =>
+                                            handleCopy(player.fullName)
+                                          }
+                                        >
+                                          {player.fullName}
+                                        </span>
+                                      </Tooltip>
+                                    </TableCell>
+
+                                    <TableCell
+                                      sx={{
+                                        fontWeight: "bold",
+                                        backgroundColor:
+                                          colors[lobbyIndex % colors.length],
+                                        color: "text.primary",
+                                      }}
+                                    >
+                                      <Tooltip title={tooltipText} arrow>
+                                        <span
+                                          className=" p-2 cursor-pointer select-none"
+                                          onClick={() =>
+                                            handleCopy(lobbyWrapper.groupName)
+                                          }
+                                        >
+                                          {lobbyWrapper.groupName}
+                                        </span>
+                                      </Tooltip>
+                                    </TableCell>
+
+                                    <TableCell
+                                      sx={{
+                                        fontWeight: "bold",
+                                        backgroundColor:
+                                          colors[lobbyIndex % colors.length],
+                                        color: "text.primary",
+                                      }}
+                                    >
+                                      <Tooltip title={tooltipText} arrow>
+                                        <span
+                                          className=" p-2 cursor-pointer select-none"
+                                          onClick={() =>
+                                            handleCopy(player.phoneNumber)
+                                          }
+                                        >
+                                          {player.phoneNumber}
+                                        </span>
+                                      </Tooltip>
                                     </TableCell>
                                     <TableCell
                                       sx={{
@@ -974,7 +1085,16 @@ export default function DashboardPage() {
                                         color: "text.primary",
                                       }}
                                     >
-                                      {groupedLobbies[0].groupName}
+                                      <Tooltip title={tooltipText} arrow>
+                                        <span
+                                          className=" p-2 cursor-pointer select-none"
+                                          onClick={() =>
+                                            handleCopy(lobbyWrapper.email)
+                                          }
+                                        >
+                                          {lobbyWrapper.email}
+                                        </span>
+                                      </Tooltip>
                                     </TableCell>
                                     <TableCell
                                       sx={{
@@ -984,7 +1104,16 @@ export default function DashboardPage() {
                                         color: "text.primary",
                                       }}
                                     >
-                                      {player.phoneNumber}
+                                      <Tooltip title={tooltipText} arrow>
+                                        <span
+                                          className=" p-2 cursor-pointer select-none"
+                                          onClick={() =>
+                                            handleCopy(player.pubgId)
+                                          }
+                                        >
+                                          {player.pubgId}
+                                        </span>
+                                      </Tooltip>
                                     </TableCell>
                                     <TableCell
                                       sx={{
@@ -994,23 +1123,12 @@ export default function DashboardPage() {
                                         color: "text.primary",
                                       }}
                                     >
-                                      {player.pubgId}
-                                    </TableCell>
-                                    <TableCell
-                                      sx={{
-                                        fontWeight: "bold",
-                                        backgroundColor:
-                                          colors[lobbyIndex % colors.length],
-                                        color: "text.primary",
-                                      }}
-                                    >
-                                     
                                       <Button
                                         variant="contained"
                                         color="primary"
                                         onClick={() =>
                                           handleSendMessage(
-                                            groupedLobbies[0].email,
+                                            lobbyWrapper.email,
                                             groupedLobbies[0].registrationUrl
                                           )
                                         }

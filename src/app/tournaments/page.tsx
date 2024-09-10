@@ -27,7 +27,7 @@ const Tournaments = () => {
     };
 
     fetchData();
-    const interval = setInterval(fetchData, 30000);
+    const interval = setInterval(fetchData, 3000);
 
     return () => clearInterval(interval);
   }, []);
@@ -96,6 +96,7 @@ const Tournaments = () => {
                     title={map.name}
                     date={map.gameStartDate}
                     time={map.gameStartTime}
+                    allowIsRegister={map.allowIsRegister}
                     registrationUrl={map.telegramLink}
                     playersNumber={map.playersNumber}
                     imageUrl={map.imageUrl} // Ensure this is correct

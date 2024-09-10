@@ -253,7 +253,27 @@ const UserProfile = () => {
                 <div key={index}>
                   <ListItem>
                     <ListItemText
-                      primary={msg.content}
+                      primary={
+                        <span>
+                          {msg.content
+                            .split(/(https?:\/\/[^\s]+)/g)
+                            .map((part, i) =>
+                              part.match(/https?:\/\/[^\s]+/) ? (
+                                <a
+                                  key={i}
+                                  href={part}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-blue-500 underline px-4 py-3"
+                                >
+                                  {part}
+                                </a>
+                              ) : (
+                                part
+                              )
+                            )}
+                        </span>
+                      }
                       secondary={new Date(msg.timestamp).toLocaleString()} // Show date and time
                     />
                   </ListItem>

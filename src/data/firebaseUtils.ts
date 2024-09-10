@@ -251,12 +251,21 @@ export const getParticipants = async (): Promise<Participant[]> => {
     gameStartDate: string,
     telegramLink: string,
     gameStartTime: string,
-    playersNumber: string
+    playersNumber: string,
+    allowIsRegister: boolean // Yangi parametr qo'shildi
 ): Promise<GameMap> => {
     try {
         const mapsRef = ref(realTimeDB, 'maps');
         const newMapRef = push(mapsRef);
-        await set(newMapRef, { name, imageUrl, gameStartDate, telegramLink, gameStartTime, playersNumber });
+        await set(newMapRef, { 
+            name, 
+            imageUrl, 
+            gameStartDate, 
+            telegramLink, 
+            gameStartTime, 
+            playersNumber,
+            allowIsRegister // Bu qiymatni ham qo'shamiz
+        });
         
         return {
             id: newMapRef.key as string, // Use key as the ID
@@ -266,12 +275,15 @@ export const getParticipants = async (): Promise<Participant[]> => {
             telegramLink,
             gameStartTime,
             playersNumber,
+            allowIsRegister // Bu qiymatni qaytaramiz
         };
     } catch (error) {
         console.error("Error adding new map: ", error);
         throw error;
     }
 };
+
+
 
 
 
@@ -293,6 +305,7 @@ export const getParticipants = async (): Promise<Participant[]> => {
           telegramLink: mapsData[id].telegramLink || '',
           gameStartTime: mapsData[id].gameStartTime || '',
           playersNumber: mapsData[id].playersNumber || '',
+          allowIsRegister: mapsData[id].allowIsRegister || '',
         }));
       } else {
         return [];
