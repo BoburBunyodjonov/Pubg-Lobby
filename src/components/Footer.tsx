@@ -89,12 +89,12 @@ const Footer = () => {
       <hr className="my-8 border-gray-700" />
 
       {/* Footer ostida */}
-      <div className="container mx-auto grid grid-cols-2 gap-5 md:grid-cols-4 justify-between items-center text-sm text-gray-400">
-        {/* <div className="flex space-x-6"> */}
+      <div className="container mx-auto grid  gap-5 md:grid-cols-2 justify-center md:justify-between items-center text-sm text-gray-400">
+        <div className="flex space-x-6 w-full justify-center">
         <Image
           src="https://companieslogo.com/img/orig/259960.KS_BIG.D-0e1f8722.png?t=1720244490"
           width={200}
-          height={200}
+          height={100}
           alt="Krafton Logo"
           className="w-24"
         />
@@ -102,18 +102,18 @@ const Footer = () => {
           src="https://www.levelinfinite.com/wp-content/uploads/2024/03/Level_Infinite_Logo_White_CMYK.png"
           alt="Level Infinite Logo"
           width={200}
-          height={200}
+          height={100}
           className="w-24"
         />
         <Image
           src="https://cdn.mobygames.com/logos/18054959-lightspeed-quantum-studios-group.png"
           alt="Lightspeed Studios Logo"
           width={200}
-          height={200}
+          height={100}
           className="w-24"
         />
-        {/* </div> */}
-        <p>&copy; 2024 PUBG Zone. All rights reserved. It&rsquo;s a great day!</p>
+        </div>
+        <p className="text-center w-full flex justify-center ">&copy; 2024 PUBG Zone. All rights reserved. It&rsquo;s a great day!</p>
       </div>
     </footer>
   );
