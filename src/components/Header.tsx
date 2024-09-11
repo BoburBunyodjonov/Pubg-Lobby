@@ -1,105 +1,12 @@
 "use client"
 
 import Link from "next/link";
-import { Gamepad2, Users, Trophy, Headphones, MenuIcon, ShieldCloseIcon } from "lucide-react";
+import { MenuIcon, ShieldCloseIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import Image from "next/image";
-const styles = `
-@keyframes shrinkingZone {
-  0% {
-    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.5);
-  }
-  100% {
-    box-shadow: 0 0 0 20px rgba(59, 130, 246, 0);
-    color: rgba(0, 0, 0, 0.359)
-  }
-    
-}
 
-@keyframes airdrop {
-  0% {
-    transform: translateY(-100%);
-  }
-  100% {
-    transform: translateY(0);
-  }
-}
 
-@keyframes gunfire {
-  0%, 100% {
-    opacity: 0;
-  }
-  50% {
-    opacity: 1;
-  }
-}
-
-.animate-shrinkingZone {
-  animation: shrinkingZone 2s infinite;
-}
-
-.animate-airdrop {
-  animation: airdrop 3s ease-in-out;
-}
-
-.animate-gunfire::before {
-  content: '💥';
-  position: absolute;
-  animation: gunfire 0.5s infinite;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-  @keyframes rotate {
-    from {
-      transform: rotate(0deg);
-    }
-    to {
-      transform: rotate(360deg);
-    }
-  }
-.animate-rotate {
-    animation: rotate 10s linear infinite;
-  }
-.animate-fadeIn {
-  animation: fadeIn 1s ease-out;
-}
-
-.animate-fadeInUp {
-  animation: fadeInUp 1s ease-out;
-}
-
-.animation-delay-200 {
-  animation-delay: 200ms;
-}
-
-.animation-delay-400 {
-  animation-delay: 400ms;
-}
-
-.animation-delay-600 {
-  animation-delay: 600ms;
-}
-
-.animation-delay-800 {
-  animation-delay: 800ms;
-}
-`;
-
-import Logo from "@/assets/images/0.png"
+import Logo from "@/assets/images/newlogo.png"
 import { Typography } from '@mui/material';
 
 const Header = () => {
@@ -115,11 +22,11 @@ const Header = () => {
   return (
     <>
       <header className="fixed inset-x-0 top-0 z-40 px-6 lg:px-8 h-16 flex items-center bg-[#1f1f1f] shadow-md">
-        <div className="container mx-auto flex items-center justify-between">
+        <div className="container mx-auto flex items-center p-0 justify-between">
           <Link className="flex items-center space-x-2" href="/">
             {/* <Gamepad2 className="h-8 w-8 text-white transition-transform duration-300 ease-in-out transform hover:rotate-12" /> */}
            <Image src={Logo} width={50} height={50} alt="PUBG ZONE"/>
-           <Typography variant="h5" color="initial" className="text-white font-bold">PUBG ZONE</Typography>
+           <Typography variant="h5" color="initial" className="text-[#DAA520] font-bold">PUBG ZONE</Typography>
           </Link>
           <nav className="hidden lg:flex lg:gap-8">
             <Link
@@ -153,7 +60,7 @@ const Header = () => {
               Register
             </Link>
           </nav>
-          <button className="lg:hidden flex items-center text-white focus:outline-none" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
+          <button className="lg:hidden flex  items-center text-white focus:outline-none" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
             {isMobileMenuOpen ? <ShieldCloseIcon className="h-6 w-6" /> : <MenuIcon className="h-6 w-6" />}
           </button>
         </div>

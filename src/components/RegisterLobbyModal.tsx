@@ -11,7 +11,6 @@ import {
 import { ref, push, onValue, get } from "firebase/database";
 import { auth, realTimeDB } from "../data/firebase"; // Adjust the path
 import { toast } from "react-toastify";
-import { CircleX } from "lucide-react";
 import { User } from "firebase/auth";
 
 export interface RegisterLobbyModalProps {
@@ -48,15 +47,11 @@ const RegisterLobbyModal: React.FC<RegisterLobbyModalProps> = ({
   const [user, setUser] = useState<User | null>(null);
   const [groupName, setGroupName] = useState("");
   const [groupNameError, setGroupNameError] = useState(Boolean);
-  // const [email, setEmail] = useState("");
   const [userData, setUserData] = useState<UserData | null>(null);
 
-  // Handle change in input fields
-
   const handleRegister = async () => {
-    let hasError = false; // Track validation errors
+    let hasError = false; 
 
-    // Check if the group name is empty
     if (!groupName) {
       setGroupNameError(true);
       hasError = true;

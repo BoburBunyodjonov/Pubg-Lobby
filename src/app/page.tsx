@@ -12,103 +12,7 @@ import Header from "@/components/Header";
 import { Gamepad2, Headphones, Trophy, Users } from "lucide-react";
 import Link from "next/link";
 
-const styles = `
-  @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-  }
 
-  @keyframes fadeInUp {
-    from {
-      opacity: 0;
-      transform: translateY(20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  @keyframes slideInLeft {
-    from {
-      opacity: 0;
-      transform: translateX(-20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateX(0);
-    }
-  }
-
-  @keyframes slideInRight {
-    from {
-      opacity: 0;
-      transform: translateX(20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateX(0);
-    }
-  }
-
-  @keyframes rotate {
-    from {
-      transform: rotate(0deg);
-    }
-    to {
-      transform: rotate(360deg);
-    }
-  }
-
-  @keyframes scale {
-    0%, 100% {
-      transform: scale(1);
-    }
-    50% {
-      transform: scale(1.05);
-    }
-  }
-
-  .animate-fadeIn {
-    animation: fadeIn 1s ease-out;
-  }
-
-  .animate-fadeInUp {
-    animation: fadeInUp 1s ease-out;
-  }
-
-  .animate-slideInLeft {
-    animation: slideInLeft 1s ease-out;
-  }
-
-  .animate-slideInRight {
-    animation: slideInRight 1s ease-out;
-  }
-
-  .animate-rotate {
-    animation: rotate 10s linear infinite;
-  }
-
-  .animate-scale {
-    animation: scale 2s ease-in-out infinite;
-  }
-
-  .animation-delay-200 {
-    animation-delay: 200ms;
-  }
-
-  .animation-delay-400 {
-    animation-delay: 400ms;
-  }
-
-  .animation-delay-600 {
-    animation-delay: 600ms;
-  }
-
-  .animation-delay-800 {
-    animation-delay: 800ms;
-  }
-`
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'default' | 'outline'
@@ -183,7 +87,7 @@ export default function Home() {
                 </div>
               </div>
             </div>
-            {showAirdrop && (
+            {/* {showAirdrop && (
               <div className="absolute top-0 left-1/2 transform -translate-x-1/2 animate-airdrop">
                 <Image
                   src={AirDrop}
@@ -192,7 +96,7 @@ export default function Home() {
                   height={200}
                 />
               </div>
-            )}
+            )} */}
           </section>
           <section className="w-full py-12 md:py-24 lg:py-32 bg-gray-800">
             <div className="container mx-auto px-4 md:px-6">

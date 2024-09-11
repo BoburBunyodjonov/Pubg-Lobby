@@ -9,7 +9,7 @@ import {
 import MailOutlineIcon from "@mui/icons-material/MailOutline";
 import Image from "next/image";
 
-import Logo from "@/assets/images/0.png";
+import Logo from "@/assets/images/newlogo.png";
 import Link from "next/link";
 
 const Footer = () => {
