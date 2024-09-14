@@ -6,6 +6,7 @@ import { getMaps } from "../../data/firebaseUtils";
 import { useEffect, useState } from "react";
 import { GameMap } from "@/types/types";
 import Filters from "@/components/Filter";
+import { Typography } from "@mui/material";
 
 const Tournaments = () => {
   const [maps, setMaps] = useState<GameMap[]>([]);
@@ -86,6 +87,11 @@ const Tournaments = () => {
               endDate={endDate || ""} // Convert null to an empty string
               setEndDate={setEndDate}
             />
+            {
+              !localStorage.getItem("userRegister") && (
+                <Typography variant="h5" align="center" fontWeight={600} className="text-white py-5">Lobbylar boshlanish vaqtini bilishni istasangiz avval saytdan ro`yxatdan o`ting!</Typography>
+              )
+            }
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {filteredMaps
                 .slice()

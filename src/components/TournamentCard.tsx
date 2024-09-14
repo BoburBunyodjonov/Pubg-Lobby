@@ -55,8 +55,6 @@ const TournamentCard: React.FC<TournamentCardProps> = ({
   const lobbyType = convertToLobbyType(playersNumber);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isRegistrationAllowed, setIsRegistrationAllowed] =
-    useState<boolean>(false);
   const handleOpenModal = () => {
     if (typeof window !== "undefined") {
       if (!localStorage.getItem("userRegister")) {
@@ -70,17 +68,6 @@ const TournamentCard: React.FC<TournamentCardProps> = ({
   const handleCloseModal = () => {
     setIsModalOpen(false);
   };
-
-  // useEffect(() => {
-  //   // Firebase'dan allowIsRegister holatini olish
-  //   const fetchData = async () => {
-  //     const snapshot = await get(ref(realTimeDB, 'maps/allowIsRegister')); // allowIsRegister maydonini olish
-  //     if (snapshot.exists()) {
-  //       setIsRegistrationAllowed(snapshot.val());
-  //     }
-  //   };
-  //   fetchData();
-  // }, []);
 
   return (
     <Card className="overflow-hidden rounded-lg shadow-lg bg-gray-900 border border-gray-700">

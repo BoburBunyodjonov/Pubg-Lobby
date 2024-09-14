@@ -19,8 +19,10 @@ import {
   ListItemText,
   Divider,
   Grid,
+  Box,
 } from "@mui/material";
 import Layout from "@/components/Layout";
+import { logoutUser } from "@/data/firebaseUtils";
 
 // Define Message interface
 interface Message {
@@ -128,13 +130,28 @@ const UserProfile = () => {
     }
   };
 
+  const handleLogout = async () => {
+    try {
+      await logoutUser();
+      window.location.href = "/login";
+      localStorage.removeItem("userRegister")
+    } catch (error) {
+      console.error("Error logging out: ", error);
+    }
+  };
+
   return (
     <Layout>
       <Container className="pt-20">
         <ToastContainer />
+        <Box display={'flex'} justifyContent={'space-between'} alignItems={'center'}>
         <Typography variant="h4" fontWeight={700} component="h1" gutterBottom>
           User Profile
         </Typography>
+        <Button variant="contained" color="primary" onClick={handleLogout}>
+            Logout
+          </Button>
+        </Box>
         <Card variant="outlined" sx={{ marginTop: 4 }}>
           <CardContent>
             <Typography variant="h6" gutterBottom>

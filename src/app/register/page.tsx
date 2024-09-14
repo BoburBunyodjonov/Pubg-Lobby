@@ -19,6 +19,7 @@ import Image from "next/image";
 
 import bg_img from "@/assets/images/2225325.jpg";
 import { getAuth } from "firebase/auth";
+import Header from "@/components/Header";
 
 const auth = getAuth();
 
@@ -47,6 +48,7 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-cover bg-center relative">
+      <Header/>
       <Image
         src={bg_img}
         alt="PUBG Mobile Battle Scene"

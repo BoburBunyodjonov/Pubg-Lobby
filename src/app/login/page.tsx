@@ -18,6 +18,7 @@ import { loginUser } from "../../data/firebaseUtils";
 import Image from "next/image";
 
 import bg_img from "@/assets/images/2225325.jpg"
+import Header from "@/components/Header";
 
 
 export default function LoginPage() {
@@ -38,6 +39,9 @@ export default function LoginPage() {
         }
       } else {
         window.location.href = "/";
+        if (typeof window !== "undefined") {
+          localStorage.setItem("userRegister", "user");
+        }
       }
     } catch (error) {
       setError("Failed to login. Please check your credentials.");
@@ -46,6 +50,7 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-cover bg-center relative">
+      <Header/>
     <Image
       src={bg_img} 
       alt="PUBG Mobile Battle Scene"

@@ -96,24 +96,24 @@ const Footer = () => {
           width={200}
           height={100}
           alt="Krafton Logo"
-          className="w-24"
+          className="w-16 lg:w-24"
         />
         <Image
           src="https://www.levelinfinite.com/wp-content/uploads/2024/03/Level_Infinite_Logo_White_CMYK.png"
           alt="Level Infinite Logo"
           width={200}
           height={100}
-          className="w-24"
+          className="w-16 lg:w-24"
         />
         <Image
           src="https://cdn.mobygames.com/logos/18054959-lightspeed-quantum-studios-group.png"
           alt="Lightspeed Studios Logo"
           width={200}
           height={100}
-          className="w-24"
+          className="w-16 lg:w-24"
         />
         </div>
-        <p className="text-center w-full flex justify-center ">&copy; 2024 PUBG Zone. All rights reserved. It&rsquo;s a great day!</p>
+        <p className="text-center text-base lg:text-xs w-full flex justify-center ">&copy; 2024 PUBG Zone. All rights reserved. It&rsquo;s a great day!</p>
       </div>
     </footer>
   );
