@@ -133,8 +133,10 @@ const UserProfile = () => {
   const handleLogout = async () => {
     try {
       await logoutUser();
-      window.location.href = "/login";
-      localStorage.removeItem("userRegister")
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("userRegister");  
+        window.location.href = "/login";  
+      }
     } catch (error) {
       console.error("Error logging out: ", error);
     }

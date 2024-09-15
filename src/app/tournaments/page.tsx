@@ -45,9 +45,7 @@ const Tournaments = () => {
       }
 
       if (mapFilter !== "all") {
-        filtered = filtered.filter(
-          (map) => map.name === mapFilter
-        );
+        filtered = filtered.filter((map) => map.name === mapFilter);
       }
 
       // Filter by date range
@@ -87,11 +85,18 @@ const Tournaments = () => {
               endDate={endDate || ""} // Convert null to an empty string
               setEndDate={setEndDate}
             />
-            {
+            {typeof window !== "undefined" &&
               !localStorage.getItem("userRegister") && (
-                <Typography variant="h5" align="center" fontWeight={600} className="text-white py-5">Lobbylar boshlanish vaqtini bilishni istasangiz avval saytdan ro`yxatdan o`ting!</Typography>
-              )
-            }
+                <Typography
+                  variant="h5"
+                  align="center"
+                  fontWeight={600}
+                  className="text-white py-5"
+                >
+                  Lobbylar boshlanish vaqtini bilishni istasangiz avval saytdan
+                  ro`yxatdan o`ting!
+                </Typography>
+              )}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {filteredMaps
                 .slice()

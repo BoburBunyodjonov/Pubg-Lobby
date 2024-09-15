@@ -32,21 +32,20 @@ export default function LoginPage() {
     e.preventDefault();
     try {
       await loginUser(email, password);
-      if (email === "admin123@gmail.com" && password === "admin123") {
-        window.location.href = "/dashboard";
-        if (typeof window !== "undefined") {
+      if (typeof window !== "undefined") {  // Ensure this code runs only on the client
+        if (email === "admin123@gmail.com" && password === "admin123") {
           localStorage.setItem("Admin", "Admin");
-        }
-      } else {
-        window.location.href = "/";
-        if (typeof window !== "undefined") {
+          window.location.href = "/dashboard";
+        } else {
           localStorage.setItem("userRegister", "user");
+          window.location.href = "/";
         }
       }
     } catch (error) {
       setError("Failed to login. Please check your credentials.");
     }
   };
+  
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-cover bg-center relative">
