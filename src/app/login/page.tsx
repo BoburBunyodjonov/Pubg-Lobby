@@ -59,7 +59,7 @@ export default function LoginPage() {
       className="absolute inset-0"
     />
     <div className="relative z-10">
-      <Card className="w-[600px] max-w-md shadow-lg border border-gray-700 rounded-lg bg-gray-800 bg-opacity-80">
+      <Card className=" max-w-md shadow-lg border border-gray-700 rounded-lg bg-gray-800 bg-opacity-80">
         <CardHeader className="bg-yellow-600 text-white p-4 rounded-t-lg">
           <CardTitle className="text-lg font-semibold">Login to PUBG Mobile</CardTitle>
           <CardDescription className="text-sm">Enter your credentials to access your account.</CardDescription>
