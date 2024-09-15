@@ -6,6 +6,7 @@ import { ref, onValue, push, set, update } from "firebase/database";
 import { User } from "firebase/auth";
 import "react-toastify/dist/ReactToastify.css";
 import { ToastContainer, toast } from "react-toastify";
+import { useRouter } from 'next/router'
 
 import {
   Container,
@@ -39,6 +40,7 @@ interface UserData {
 }
 
 const UserProfile = () => {
+  const router = useRouter()
   const [user, setUser] = useState<User | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
@@ -46,19 +48,20 @@ const UserProfile = () => {
   const [editMode, setEditMode] = useState(false);
 
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((user) => {
-      if (user) {
-        setUser(user);
-        fetchMessages(user.uid);
-        fetchUserData(user.uid);
-      } else {
-        window.location.href = "/login"; // Redirect to login
-      }
-    });
+    if (typeof window !== "undefined") {
+      const unsubscribe = auth.onAuthStateChanged((user) => {
+        if (user) {
+          setUser(user);
+          fetchMessages(user.uid);
+          fetchUserData(user.uid);
+        } else {
+          router.push('/login');
+        }
+      });
 
-    return () => unsubscribe();
-  }, []);
-
+      return () => unsubscribe();
+    }
+  }, [router]);
   const fetchMessages = (userId: string) => {
     const messagesRef = ref(realTimeDB, `messages/${userId}`);
     onValue(messagesRef, (snapshot) => {
@@ -134,13 +137,14 @@ const UserProfile = () => {
     try {
       await logoutUser();
       if (typeof window !== "undefined") {
-        localStorage.removeItem("userRegister");  
-        window.location.href = "/login";  
+        localStorage.removeItem("userRegister");
       }
+      router.push("/login");
     } catch (error) {
       console.error("Error logging out: ", error);
     }
   };
+  
 
   return (
     <Layout>

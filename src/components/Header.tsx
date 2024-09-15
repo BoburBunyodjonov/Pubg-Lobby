@@ -11,6 +11,9 @@ import { Typography } from "@mui/material";
 const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [currentPath, setCurrentPath] = useState("");
+  const [isUserRegistered, setIsUserRegistered] = useState<boolean | null>(
+    null
+  );
 
   useEffect(() => {
     setCurrentPath(window.location.pathname);
@@ -18,6 +21,11 @@ const Header = () => {
 
   const isActive = (path: string) => currentPath === path;
 
+  useEffect(() => {
+    // Client-side da ishlashini ta'minlaydi
+    const userRegister = localStorage.getItem("userRegister");
+    setIsUserRegistered(!!userRegister);
+  }, []);
   return (
     <>
       <header className="fixed inset-x-0 top-0 z-40 px-6 lg:px-8 h-16 flex items-center bg-[#1f1f1f] shadow-md">
@@ -26,7 +34,7 @@ const Header = () => {
             {/* <Gamepad2 className="h-8 w-8 text-white transition-transform duration-300 ease-in-out transform hover:rotate-12" /> */}
             <Image src={Logo} width={50} height={50} alt="PUBG ZONE" />
             <Typography
-              style={{color: '#DAA520'}}
+              style={{ color: "#DAA520" }}
               variant="h5"
               color="initial"
               className="font-bold"
@@ -58,25 +66,26 @@ const Header = () => {
               Tournaments
             </Link>
 
-            {localStorage.getItem("userRegister") ? (
-              <Link
-                className={`text-lg font-medium transition-colors duration-300 ease-in-out ${
-                  isActive("/profile") ? "text-blue-400" : "text-white"
-                } hover:text-blue-400`}
-                href="/profile"
-              >
-                Profile
-              </Link>
-            ) : (
-              <Link
-                className={`text-lg font-medium transition-colors duration-300 ease-in-out ${
-                  isActive("/register") ? "text-blue-400" : "text-white"
-                } hover:text-blue-400`}
-                href="/register"
-              >
-                Register
-              </Link>
-            )}
+            {isUserRegistered !== null &&
+              (isUserRegistered ? (
+                <Link
+                  className={`text-lg font-medium transition-colors duration-300 ease-in-out ${
+                    isActive("/profile") ? "text-blue-400" : "text-white"
+                  } hover:text-blue-400`}
+                  href="/profile"
+                >
+                  Profile
+                </Link>
+              ) : (
+                <Link
+                  className={`text-lg font-medium transition-colors duration-300 ease-in-out ${
+                    isActive("/register") ? "text-blue-400" : "text-white"
+                  } hover:text-blue-400`}
+                  href="/register"
+                >
+                  Register
+                </Link>
+              ))}
           </nav>
           <button
             className="lg:hidden flex  items-center text-white focus:outline-none"
@@ -118,9 +127,9 @@ const Header = () => {
             >
               Tournaments
             </Link>
-            {
-              localStorage.getItem("userRegister") ? (
-                <Link
+            {isUserRegistered !== null &&
+              (isUserRegistered ? (
+              <Link
                 className={`text-xl font-medium py-4 ${
                   isActive("/profile") ? "text-blue-400" : "text-white"
                 } hover:text-blue-400`}
@@ -129,8 +138,8 @@ const Header = () => {
               >
                 Profile
               </Link>
-              ) : (
-                <Link
+            ) : (
+              <Link
                 className={`text-xl font-medium py-4 ${
                   isActive("/register") ? "text-blue-400" : "text-white"
                 } hover:text-blue-400`}
@@ -139,10 +148,7 @@ const Header = () => {
               >
                 Register
               </Link>
-              )
-            }
-            
-            
+             ))}
           </div>
         </div>
       )}

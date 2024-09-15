@@ -34,11 +34,9 @@ export default function RegisterPage() {
     e.preventDefault();
     try {
       const user = await registerUser(email, password, name, phone);
-      
       if (typeof window !== "undefined") {
         localStorage.setItem("userRegister", JSON.stringify(user));
       }
-      
       window.location.href = "/";
     } catch (error) {
       setError("Failed to register. Please try again.");
