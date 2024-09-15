@@ -6,7 +6,6 @@ import { ref, onValue, push, set, update } from "firebase/database";
 import { User } from "firebase/auth";
 import "react-toastify/dist/ReactToastify.css";
 import { ToastContainer, toast } from "react-toastify";
-import { useRouter } from 'next/router'
 
 import {
   Container,
@@ -24,12 +23,16 @@ import {
 } from "@mui/material";
 import Layout from "@/components/Layout";
 import { logoutUser } from "@/data/firebaseUtils";
+import dynamic from 'next/dynamic';
+
+
 
 // Define Message interface
 interface Message {
   content: string;
   timestamp: number;
 }
+
 
 // Define UserData interface
 interface UserData {
@@ -38,9 +41,11 @@ interface UserData {
   phone: string;
   password: string;
 }
-
+const ClientOnlyComponent = dynamic(() => import('../../components/ ClientOnlyComponent'), {
+  ssr: false, // This ensures it only loads on the client side
+});
 const UserProfile = () => {
-  const router = useRouter()
+  
   const [user, setUser] = useState<User | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
@@ -55,13 +60,13 @@ const UserProfile = () => {
           fetchMessages(user.uid);
           fetchUserData(user.uid);
         } else {
-          router.push('/login');
+          window.location.href = '/login';
         }
       });
 
       return () => unsubscribe();
     }
-  }, [router]);
+  }, []);
   const fetchMessages = (userId: string) => {
     const messagesRef = ref(realTimeDB, `messages/${userId}`);
     onValue(messagesRef, (snapshot) => {
@@ -139,7 +144,7 @@ const UserProfile = () => {
       if (typeof window !== "undefined") {
         localStorage.removeItem("userRegister");
       }
-      router.push("/login");
+      window.location.href = "/login";
     } catch (error) {
       console.error("Error logging out: ", error);
     }
