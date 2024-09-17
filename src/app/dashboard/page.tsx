@@ -467,7 +467,7 @@ export default function DashboardPage() {
 
   return (
     <>
-      <div className="p-5">
+      <div className="container mx-auto p-5">
         <ToastContainer />
         <Grid2
           container
@@ -488,24 +488,21 @@ export default function DashboardPage() {
           sx={{
             flexGrow: 1,
             bgcolor: "background.paper",
-            display: "flex",
+            display: "",
           }}
         >
           <Tabs
-            orientation="vertical"
+            // orientation="vertical"
             variant="scrollable"
             value={value}
             onChange={handleChange}
             aria-label="Vertical tabs example"
-            sx={{ borderRight: 1, borderColor: "divider" }}
+            sx={{ border: "1px solid silver"}}
           >
-            <Tab label="Dashboard" {...a11yProps(0)} />
-            <Tab label="All Users" {...a11yProps(1)} />
-            <Tab label="Add Maps" {...a11yProps(2)} />
-            <Tab label="Registered to Lobby" {...a11yProps(3)} />
-            <Tab label="Item Five" {...a11yProps(4)} />
-            <Tab label="Item Six" {...a11yProps(5)} />
-            <Tab label="Item Seven" {...a11yProps(6)} />
+            <Tab sx={{color: 'black', fontWeight: "700"}} label="Dashboard" {...a11yProps(0)} />
+            <Tab sx={{color: 'black', fontWeight: "700"}} label="All Users" {...a11yProps(1)} />
+            <Tab sx={{color: 'black', fontWeight: "700"}} label="Add Maps" {...a11yProps(2)} />
+            <Tab sx={{color: 'black', fontWeight: "700"}} label="Registered to Lobby" {...a11yProps(3)} />
           </Tabs>
           <TabPanel value={value} index={0}>
             <div
