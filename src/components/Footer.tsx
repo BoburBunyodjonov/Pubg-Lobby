@@ -77,6 +77,7 @@ const Footer = () => {
           <div className="flex justify-center md:justify-start space-x-4">
             <Image src={Logo} alt="PUBG Logo 1" width={120} height={120} />
             <Image
+              className="w-20 h-20 lg:w-36 lg:h-36"
               src="https://www.pubgmobile.com/images/event/brandassets/down-logo8.png"
               width={120}
               height={120}
@@ -96,21 +97,21 @@ const Footer = () => {
           width={200}
           height={100}
           alt="Krafton Logo"
-          className="w-16 lg:w-24"
+          className="w-16 h-12 lg:w-24 lg:h-16"
         />
         <Image
           src="https://www.levelinfinite.com/wp-content/uploads/2024/03/Level_Infinite_Logo_White_CMYK.png"
           alt="Level Infinite Logo"
           width={200}
           height={100}
-          className="w-16 lg:w-24"
+          className="w-16 h-12 lg:w-24 lg:h-16"
         />
         <Image
           src="https://cdn.mobygames.com/logos/18054959-lightspeed-quantum-studios-group.png"
           alt="Lightspeed Studios Logo"
           width={200}
           height={100}
-          className="w-16 lg:w-24"
+          className="w-16 h-12 lg:w-24 lg:h-16"
         />
         </div>
         <p className="text-center text-base lg:text-xs w-full flex justify-center ">&copy; 2024 PUBG Zone. All rights reserved. It&rsquo;s a great day!</p>
