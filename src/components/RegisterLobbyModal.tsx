@@ -222,6 +222,7 @@ const RegisterLobbyModal: React.FC<RegisterLobbyModalProps> = ({
           boxShadow: 24,
           p: 4,
           overflow: "scroll",
+          padding: "60px 20px"
         }}
       >
         <Typography variant="h6" component="h2" textAlign="center">
