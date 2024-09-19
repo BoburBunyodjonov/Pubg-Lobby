@@ -6,10 +6,9 @@ import {
   TextField,
   Button,
   Grid,
-  IconButton,
 } from "@mui/material";
 import { ref, push, onValue, get } from "firebase/database";
-import { auth, realTimeDB } from "../data/firebase"; // Adjust the path
+import { auth, realTimeDB } from "../data/firebase";
 import { toast } from "react-toastify";
 import { User } from "firebase/auth";
 
@@ -26,6 +25,18 @@ interface UserData {
   email: string;
 }
 
+interface Player {
+  fullName: string;
+  pubgId: string;
+  phoneNumber: string;
+}
+
+interface PlayerErrors {
+  fullName?: string;
+  pubgId?: string;
+  phoneNumber?: string;
+}
+
 const RegisterLobbyModal: React.FC<RegisterLobbyModalProps> = ({
   open,
   onClose,
@@ -35,7 +46,7 @@ const RegisterLobbyModal: React.FC<RegisterLobbyModalProps> = ({
   registrationUrl,
 }) => {
   // Initialize players based on the lobby type
-  const initialPlayers = Array(
+  const initialPlayers: Player[] = Array(
     lobbyType === "Solo" ? 1 : lobbyType === "Duo" ? 2 : 4
   ).fill({
     fullName: "",
@@ -43,14 +54,16 @@ const RegisterLobbyModal: React.FC<RegisterLobbyModalProps> = ({
     phoneNumber: "",
   });
 
-  const [players, setPlayers] = useState(initialPlayers);
+  const [players, setPlayers] = useState<Player[]>(initialPlayers);
+  const [playerErrors, setPlayerErrors] = useState<PlayerErrors[]>(initialPlayers.map(() => ({})));
   const [user, setUser] = useState<User | null>(null);
   const [groupName, setGroupName] = useState("");
-  const [groupNameError, setGroupNameError] = useState(Boolean);
+  const [groupNameError, setGroupNameError] = useState(false);
   const [userData, setUserData] = useState<UserData | null>(null);
 
   const handleRegister = async () => {
-    let hasError = false; 
+    let hasError = false;
+    const updatedErrors = players.map((player) => ({ fullName: "", pubgId: "", phoneNumber: "" }));
 
     if (!groupName) {
       setGroupNameError(true);
@@ -60,29 +73,30 @@ const RegisterLobbyModal: React.FC<RegisterLobbyModalProps> = ({
     }
 
     // Check if any player fields are empty
-    const updatedPlayers = players.map((player) => {
-      const newPlayer = { ...player, errors: {} };
+    const updatedPlayersErrors = players.map((player, index) => {
+      const errors: PlayerErrors = {};
 
       if (!player.fullName) {
-        newPlayer.errors.fullName = "Toʻliq ism talab qilinadi";
+        errors.fullName = "Toʻliq ism talab qilinadi";
         hasError = true;
       }
 
       if (!player.pubgId) {
-        newPlayer.errors.pubgId = "PUBG ID talab qilinadi";
+        errors.pubgId = "PUBG ID talab qilinadi";
         hasError = true;
       }
 
       if (!player.phoneNumber) {
-        newPlayer.errors.phoneNumber = "Telefon raqami kerak";
+        errors.phoneNumber = "Telefon raqami kerak";
         hasError = true;
       }
 
-      return newPlayer;
+      // updatedErrors[index] = errors;
+      return errors;
     });
 
-    // Update the players state with validation errors
-    setPlayers(updatedPlayers);
+    // Update the playerErrors state with validation errors
+    setPlayerErrors(updatedPlayersErrors);
 
     // If there's an error, stop the registration process
     if (hasError) {
@@ -104,9 +118,7 @@ const RegisterLobbyModal: React.FC<RegisterLobbyModalProps> = ({
       }
 
       if (groupExists) {
-        toast.error(
-          "Bu guruh nomi allaqachon olingan. Boshqa nom tanlang."
-        );
+        toast.error("Bu guruh nomi allaqachon olingan. Boshqa nom tanlang.");
         return;
       }
 
@@ -137,26 +149,29 @@ const RegisterLobbyModal: React.FC<RegisterLobbyModalProps> = ({
     }
   };
 
-  // Handle input change and clear error for group name
   const handleGroupNameChange = (e: any) => {
     setGroupName(e.target.value);
     if (groupNameError) setGroupNameError(false); // Clear error on input
   };
 
-  // Handle input change for player fields and clear specific field error
-  const handlePlayerChange = (index: number, field: string, value: string) => {
+  const handlePlayerChange = (index: number, field: keyof Player, value: string) => {
     const updatedPlayers = [...players];
-    updatedPlayers[index][field] = value;
-
-    // Clear the error for the specific field if a value is entered
-    if (updatedPlayers[index].errors) {
-      updatedPlayers[index].errors[field] = !value
-        ? `${field} majburiy, shart`
-        : "";
-    }
-
+    // Faqat o'zgargan input maydonini yangilaymiz
+    updatedPlayers[index] = {
+      ...updatedPlayers[index], 
+      [field]: value
+    };
     setPlayers(updatedPlayers);
-  };
+
+    // O'sha input uchun xato xabarlarini yangilaymiz
+    const updatedErrors = [...playerErrors];
+    updatedErrors[index] = {
+      ...updatedErrors[index],
+      [field]: value ? "" : `${field} majburiy, shart`
+    };
+    setPlayerErrors(updatedErrors);
+};
+
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
@@ -196,15 +211,17 @@ const RegisterLobbyModal: React.FC<RegisterLobbyModalProps> = ({
       <Box
         sx={{
           position: "absolute",
+          height: "750px",
           top: "50%",
           left: "50%",
           transform: "translate(-50%, -50%)",
-          width: "80%",
+          width: "100%",
           maxWidth: 600,
           bgcolor: "background.paper",
           borderRadius: 2,
           boxShadow: 24,
           p: 4,
+          overflow: "scroll",
         }}
       >
         <Typography variant="h6" component="h2" textAlign="center">
@@ -237,8 +254,8 @@ const RegisterLobbyModal: React.FC<RegisterLobbyModalProps> = ({
                 variant="outlined"
                 margin="normal"
                 required
-                error={!!player.errors?.fullName}
-                helperText={player.errors?.fullName}
+                error={!!playerErrors[index]?.fullName}
+                helperText={playerErrors[index]?.fullName}
                 value={player.fullName}
                 onChange={(e) =>
                   handlePlayerChange(index, "fullName", e.target.value)
@@ -250,8 +267,8 @@ const RegisterLobbyModal: React.FC<RegisterLobbyModalProps> = ({
                 variant="outlined"
                 margin="normal"
                 required
-                error={!!player.errors?.pubgId}
-                helperText={player.errors?.pubgId}
+                error={!!playerErrors[index]?.pubgId}
+                helperText={playerErrors[index]?.pubgId}
                 value={player.pubgId}
                 onChange={(e) =>
                   handlePlayerChange(index, "pubgId", e.target.value)
@@ -263,8 +280,8 @@ const RegisterLobbyModal: React.FC<RegisterLobbyModalProps> = ({
                 variant="outlined"
                 margin="normal"
                 required
-                error={!!player.errors?.phoneNumber}
-                helperText={player.errors?.phoneNumber}
+                error={!!playerErrors[index]?.phoneNumber}
+                helperText={playerErrors[index]?.phoneNumber}
                 value={player.phoneNumber}
                 onChange={(e) =>
                   handlePlayerChange(index, "phoneNumber", e.target.value)
@@ -275,10 +292,13 @@ const RegisterLobbyModal: React.FC<RegisterLobbyModalProps> = ({
         </Grid>
 
         <Button
+          variant="contained"
+          color="primary"
+          sx={{ mt: 3 }}
+          fullWidth
           onClick={handleRegister}
-          className="w-full bg-yellow-600 text-white p-3 rounded-lg hover:bg-yellow-700 transition-colors duration-300 ease-in-out"
         >
-          Register Lobby
+          Register
         </Button>
       </Box>
     </Modal>
