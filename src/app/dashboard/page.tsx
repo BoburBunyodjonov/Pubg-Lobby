@@ -528,7 +528,7 @@ export default function DashboardPage() {
             </div>
           </TabPanel>
           <TabPanel value={value} index={1}>
-            <Card style={{ marginBottom: "32px" }}>
+            <Card style={{ marginBottom: "32px", overflow: 'scroll'}}>
               <CardHeader title="User Management" />
               <CardContent>
                 <Table>
@@ -848,7 +848,7 @@ export default function DashboardPage() {
             )}
           </TabPanel>
           <TabPanel value={value} index={3}>
-            <Card sx={{ mb: 4, boxShadow: 3 }}>
+            <Card sx={{ mb: 4, boxShadow: 3, overflow: 'scroll' }}>
               <CardHeader
                 title="Registered to Lobby"
                 titleTypographyProps={{
@@ -856,7 +856,7 @@ export default function DashboardPage() {
                   fontWeight: "bold",
                   color: "primary.main",
                 }}
-                sx={{ backgroundColor: "#f5f5f5", padding: 2 }}
+                sx={{backgroundColor: "#f5f5f5", padding: 2 }}
               />
               <CardContent>
                 <div
